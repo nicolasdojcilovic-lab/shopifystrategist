@@ -1,0 +1,67 @@
+{
+  "fixture_id": "solo_ok_instant",
+  "name": "SOLO OK Instant",
+  "category": "solo",
+  "tier": "gold",
+  "profiles": ["pr_gate"],
+  "notes": "PLACEHOLDER: replace URL with owned test shop PDP.",
+  "serial_only": false,
+  "endpoint": "/api/audit-solo",
+  "request": {
+    "locale": "en",
+    "url": "https://placeholder-shop-a.myshopify.com/products/placeholder-product-a",
+    "options": {
+      "copy_ready": false
+    },
+    "timeouts_ms": {
+      "capture_per_source": 45000,
+      "detectors_per_source": 8000,
+      "scoring_total": 12000,
+      "report_total": 8000,
+      "render_pdf_total": 45000
+    }
+  },
+  "render": {
+    "pdf": true,
+    "csv": true
+  },
+  "expect": {
+    "status": "ok",
+    "mode": "solo",
+    "alignment_level": "null_in_solo",
+    "evidence_completeness": "complete",
+    "missing_evidence": {
+      "must_exist_if_not_complete": false,
+      "must_detail_by_source_in_duo": false
+    },
+    "errors": {
+      "allowed_stages": "any",
+      "required_stage": "none",
+      "allowed_missing_evidence_reasons": "any",
+      "required_missing_evidence_reason": "none",
+      "source_policy": {
+        "solo_source_must_be_na": true,
+        "duo_sources_allowed": "by_mode"
+      }
+    },
+    "determinism": {
+      "runs": 2,
+      "must_match": [
+        "exports",
+        "keys",
+        "report_meta",
+        "html_hash",
+        "ticket_order",
+        "evidence_order"
+      ],
+      "must_not_use": ["artifacts_refs"]
+    },
+    "html_fetch_policy": {
+      "required": true
+    },
+    "skip_conditions": {
+      "skip_pdf_assertions_if_render_pdf_disabled": true,
+      "skip_csv_assertions_if_render_csv_disabled": true
+    }
+  }
+}

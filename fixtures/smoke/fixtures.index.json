@@ -1,0 +1,92 @@
+[
+  {
+    "fixture_id": "solo_ok_instant",
+    "category": "solo",
+    "scenario": "solo baseline instant",
+    "enabled": true,
+    "tier": "gold",
+    "profiles": ["pr_gate"],
+    "tags": ["solo"]
+  },
+  {
+    "fixture_id": "solo_ok_copyready",
+    "category": "solo",
+    "scenario": "solo baseline copy ready",
+    "enabled": true,
+    "tier": "silver",
+    "profiles": ["pr_gate"],
+    "tags": ["solo"]
+  },
+  {
+    "fixture_id": "duo_ab_ok",
+    "category": "duo",
+    "scenario": "duo AB baseline",
+    "enabled": true,
+    "tier": "gold",
+    "profiles": ["pr_gate"],
+    "tags": ["duo_ab"]
+  },
+  {
+    "fixture_id": "duo_before_after_ok",
+    "category": "duo",
+    "scenario": "duo before/after baseline",
+    "enabled": true,
+    "tier": "silver",
+    "profiles": ["pr_gate"],
+    "tags": ["duo_before_after"]
+  },
+  {
+    "fixture_id": "degraded_cookie",
+    "category": "degraded",
+    "scenario": "degraded cookie consent",
+    "enabled": true,
+    "tier": "bronze",
+    "profiles": ["nightly"],
+    "tags": ["degraded", "solo"]
+  },
+  {
+    "fixture_id": "degraded_popup",
+    "category": "degraded",
+    "scenario": "degraded popup",
+    "enabled": true,
+    "tier": "bronze",
+    "profiles": ["nightly"],
+    "tags": ["degraded", "solo"]
+  },
+  {
+    "fixture_id": "degraded_timeout",
+    "category": "degraded",
+    "scenario": "degraded timeout",
+    "enabled": true,
+    "tier": "bronze",
+    "profiles": ["nightly"],
+    "tags": ["degraded", "solo"]
+  },
+  {
+    "fixture_id": "degraded_navigation_intercepted",
+    "category": "degraded",
+    "scenario": "degraded navigation intercepted",
+    "enabled": true,
+    "tier": "bronze",
+    "profiles": ["nightly"],
+    "tags": ["degraded", "solo"]
+  },
+  {
+    "fixture_id": "degraded_infinite_scroll_or_lazyload",
+    "category": "degraded",
+    "scenario": "degraded infinite scroll or lazyload",
+    "enabled": true,
+    "tier": "bronze",
+    "profiles": ["nightly"],
+    "tags": ["degraded", "solo"]
+  },
+  {
+    "fixture_id": "degraded_unknown_render_issue",
+    "category": "degraded",
+    "scenario": "degraded unknown render issue",
+    "enabled": true,
+    "tier": "bronze",
+    "profiles": ["nightly"],
+    "tags": ["degraded", "solo"]
+  }
+]

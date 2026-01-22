@@ -1,0 +1,67 @@
+{
+  "fixture_id": "degraded_timeout",
+  "name": "Degraded Timeout",
+  "category": "degraded",
+  "tier": "bronze",
+  "profiles": ["nightly"],
+  "notes": "PLACEHOLDER: replace URL with a reproducible timeout target.",
+  "serial_only": false,
+  "endpoint": "/api/audit-solo",
+  "request": {
+    "locale": "en",
+    "url": "https://placeholder-shop-d.myshopify.com/products/placeholder-product-d",
+    "options": {
+      "copy_ready": false
+    },
+    "timeouts_ms": {
+      "capture_per_source": 45000,
+      "detectors_per_source": 8000,
+      "scoring_total": 12000,
+      "report_total": 8000,
+      "render_pdf_total": 45000
+    }
+  },
+  "render": {
+    "pdf": false,
+    "csv": true
+  },
+  "expect": {
+    "status": "ok",
+    "mode": "solo",
+    "alignment_level": "null_in_solo",
+    "evidence_completeness": "insufficient",
+    "missing_evidence": {
+      "must_exist_if_not_complete": true,
+      "must_detail_by_source_in_duo": false
+    },
+    "errors": {
+      "allowed_stages": ["capture"],
+      "required_stage": "capture",
+      "allowed_missing_evidence_reasons": ["timeout"],
+      "required_missing_evidence_reason": "timeout",
+      "source_policy": {
+        "solo_source_must_be_na": true,
+        "duo_sources_allowed": "by_mode"
+      }
+    },
+    "determinism": {
+      "runs": 2,
+      "must_match": [
+        "exports",
+        "keys",
+        "report_meta",
+        "html_hash",
+        "ticket_order",
+        "evidence_order"
+      ],
+      "must_not_use": ["artifacts_refs"]
+    },
+    "html_fetch_policy": {
+      "required": false
+    },
+    "skip_conditions": {
+      "skip_pdf_assertions_if_render_pdf_disabled": true,
+      "skip_csv_assertions_if_render_csv_disabled": true
+    }
+  }
+}
