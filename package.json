@@ -1,0 +1,25 @@
+{
+  "name": "shopifystrategist",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nicolasdojcilovic-lab/shopifystrategist.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/nicolasdojcilovic-lab/shopifystrategist/issues"
+  },
+  "homepage": "https://github.com/nicolasdojcilovic-lab/shopifystrategist#readme"
+}
