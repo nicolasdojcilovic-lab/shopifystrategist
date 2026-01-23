@@ -3,13 +3,15 @@
   "name": "Degraded Navigation Intercepted",
   "category": "degraded",
   "tier": "bronze",
-  "profiles": ["nightly"],
-  "notes": "PLACEHOLDER: replace URL with a reproducible navigation intercept.",
+  "profiles": [
+    "nightly"
+  ],
+  "notes": "",
   "serial_only": false,
   "endpoint": "/api/audit-solo",
   "request": {
     "locale": "en",
-    "url": "https://placeholder-shop-d.myshopify.com/products/placeholder-product-d",
+    "url": "https://ss-fixtures-owned.myshopify.com/products/degraded-navigation-intercepted",
     "options": {
       "copy_ready": false
     },
@@ -35,9 +37,13 @@
       "must_detail_by_source_in_duo": false
     },
     "errors": {
-      "allowed_stages": ["capture"],
+      "allowed_stages": [
+        "capture"
+      ],
       "required_stage": "capture",
-      "allowed_missing_evidence_reasons": ["navigation_intercepted"],
+      "allowed_missing_evidence_reasons": [
+        "navigation_intercepted"
+      ],
       "required_missing_evidence_reason": "navigation_intercepted",
       "source_policy": {
         "solo_source_must_be_na": true,
@@ -54,7 +60,9 @@
         "ticket_order",
         "evidence_order"
       ],
-      "must_not_use": ["artifacts_refs"]
+      "must_not_use": [
+        "artifacts_refs"
+      ]
     },
     "html_fetch_policy": {
       "required": false

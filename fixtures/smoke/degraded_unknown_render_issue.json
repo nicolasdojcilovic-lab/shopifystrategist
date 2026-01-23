@@ -3,13 +3,15 @@
   "name": "Degraded Unknown Render Issue",
   "category": "degraded",
   "tier": "bronze",
-  "profiles": ["nightly"],
-  "notes": "PLACEHOLDER: replace URL with a reproducible unknown render issue target.",
+  "profiles": [
+    "nightly"
+  ],
+  "notes": "",
   "serial_only": false,
   "endpoint": "/api/audit-solo",
   "request": {
     "locale": "en",
-    "url": "https://placeholder-shop-d.myshopify.com/products/placeholder-product-d",
+    "url": "https://ss-fixtures-owned.myshopify.com/products/degraded-unknown-render-issue",
     "options": {
       "copy_ready": false
     },
@@ -35,9 +37,13 @@
       "must_detail_by_source_in_duo": false
     },
     "errors": {
-      "allowed_stages": ["capture"],
+      "allowed_stages": [
+        "capture"
+      ],
       "required_stage": "capture",
-      "allowed_missing_evidence_reasons": ["unknown_render_issue"],
+      "allowed_missing_evidence_reasons": [
+        "unknown_render_issue"
+      ],
       "required_missing_evidence_reason": "unknown_render_issue",
       "source_policy": {
         "solo_source_must_be_na": true,
@@ -54,7 +60,9 @@
         "ticket_order",
         "evidence_order"
       ],
-      "must_not_use": ["artifacts_refs"]
+      "must_not_use": [
+        "artifacts_refs"
+      ]
     },
     "html_fetch_policy": {
       "required": false

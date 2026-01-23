@@ -3,13 +3,15 @@
   "name": "Degraded Cookie Consent",
   "category": "degraded",
   "tier": "bronze",
-  "profiles": ["nightly"],
-  "notes": "PLACEHOLDER: replace URL with a reproducible cookie consent block.",
+  "profiles": [
+    "nightly"
+  ],
+  "notes": "",
   "serial_only": false,
   "endpoint": "/api/audit-solo",
   "request": {
     "locale": "en",
-    "url": "https://placeholder-shop-d.myshopify.com/products/placeholder-product-d",
+    "url": "https://ss-fixtures-owned.myshopify.com/products/degraded-cookie",
     "options": {
       "copy_ready": false
     },
@@ -35,9 +37,13 @@
       "must_detail_by_source_in_duo": false
     },
     "errors": {
-      "allowed_stages": ["capture"],
+      "allowed_stages": [
+        "capture"
+      ],
       "required_stage": "capture",
-      "allowed_missing_evidence_reasons": ["blocked_by_cookie_consent"],
+      "allowed_missing_evidence_reasons": [
+        "blocked_by_cookie_consent"
+      ],
       "required_missing_evidence_reason": "blocked_by_cookie_consent",
       "source_policy": {
         "solo_source_must_be_na": true,
@@ -54,7 +60,9 @@
         "ticket_order",
         "evidence_order"
       ],
-      "must_not_use": ["artifacts_refs"]
+      "must_not_use": [
+        "artifacts_refs"
+      ]
     },
     "html_fetch_policy": {
       "required": false

@@ -3,16 +3,18 @@
   "name": "DUO AB OK",
   "category": "duo",
   "tier": "gold",
-  "profiles": ["pr_gate"],
-  "notes": "PLACEHOLDER: replace URLs with owned test shop PDPs.",
+  "profiles": [
+    "pr_gate"
+  ],
+  "notes": "",
   "serial_only": false,
   "endpoint": "/api/audit-duo",
   "request": {
     "compare_type": "ab",
     "locale": "en",
     "urls": {
-      "page_a": "https://placeholder-shop-a.myshopify.com/products/placeholder-product-a",
-      "page_b": "https://placeholder-shop-b.myshopify.com/products/placeholder-product-b"
+      "page_a": "https://www.allbirds.com/products/mens-wool-runner-nz-waterproof",
+      "page_b": "https://www.allbirds.com/products/mens-strider-dark-navy"
     },
     "options": {
       "copy_ready": false
@@ -58,7 +60,9 @@
         "ticket_order",
         "evidence_order"
       ],
-      "must_not_use": ["artifacts_refs"]
+      "must_not_use": [
+        "artifacts_refs"
+      ]
     },
     "html_fetch_policy": {
       "required": true

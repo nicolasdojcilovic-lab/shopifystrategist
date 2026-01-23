@@ -3,16 +3,18 @@
   "name": "DUO Before After OK",
   "category": "duo",
   "tier": "silver",
-  "profiles": ["pr_gate"],
-  "notes": "PLACEHOLDER: replace URLs with owned test shop PDP before/after variants.",
+  "profiles": [
+    "pr_gate"
+  ],
+  "notes": "",
   "serial_only": false,
   "endpoint": "/api/audit-duo",
   "request": {
     "compare_type": "before_after",
     "locale": "en",
     "urls": {
-      "before": "https://placeholder-shop-c.myshopify.com/products/placeholder-product-c?variant=111",
-      "after": "https://placeholder-shop-c.myshopify.com/products/placeholder-product-c?variant=222"
+      "before": "https://www.lemsshoes.com/products/mens-primal-eco",
+      "after": "https://www.lemsshoes.com/products/mens-primal-eco"
     },
     "options": {
       "copy_ready": false
@@ -58,7 +60,9 @@
         "ticket_order",
         "evidence_order"
       ],
-      "must_not_use": ["artifacts_refs"]
+      "must_not_use": [
+        "artifacts_refs"
+      ]
     },
     "html_fetch_policy": {
       "required": true
