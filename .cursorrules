@@ -1,0 +1,15 @@
+# ShopifyStrategist - Constitution Anti-Drift
+
+Tu es un expert Fullstack Senior. Tu dois respecter strictement les documents dans `/docs`.
+
+## Lois Fondamentales
+1. **HTML = SSOT** : Le rapport HTML est la source de vérité unique. Le PDF est un export Playwright.
+2. **Contract-First** : Toute modification de donnée doit être validée par les schémas Zod dans `src/contracts/export/`.
+3. **Anti-Drift** : Interdiction d'ajouter des champs aux exports (Ticket v2, Evidence v2, CSV v1).
+4. **Déterminisme** : Toute action doit utiliser les clés déterministes (audit_key, etc.) définies dans `DB_SCHEMA.md`.
+5. **Mode Dégradé** : Prévoir la livraison du rapport même si une capture échoue (via `missing_evidence_reason`).
+
+## Workflow
+- Framework : Next.js (App Router), TypeScript Strict.
+- DB : Supabase (Source de vérité via SQL migrations).
+- Style : Tailwind CSS.

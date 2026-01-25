@@ -1,0 +1,86 @@
+{
+  "compilerOptions": {
+    /* Language and Environment */
+    "target": "ES2022",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "jsx": "preserve",
+    /* Modules */
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    /* Path Aliases (Anti-Drift) */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@ssot/*": [
+        "./src/ssot/*"
+      ],
+      "@contracts/*": [
+        "./src/contracts/*"
+      ],
+      "@core/*": [
+        "./src/core/*"
+      ],
+      "@adapters/*": [
+        "./src/adapters/*"
+      ],
+      "@app/*": [
+        "./src/app/*"
+      ],
+      "@devtools/*": [
+        "./src/devtools/*"
+      ],
+      "@jobs/*": [
+        "./src/jobs/*"
+      ],
+      "@lib/*": [
+        "./src/lib/*"
+      ]
+    },
+    /* Emit */
+    "noEmit": true,
+    "incremental": true,
+    /* Interop Constraints */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    /* Type Checking (Strict) */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    /* Completeness */
+    "skipLibCheck": true,
+    /* Next.js specific */
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "allowJs": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "scripts/**/*.ts",
+    "scripts/**/*.mjs",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "out",
+    "dist",
+    "tmp"
+  ]
+}

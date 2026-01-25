@@ -1,0 +1,346 @@
+// ⚠️ SCHÉMA SSOT — ShopifyStrategist Database Schema
+// Référence stricte: docs/DB_SCHEMA.md (v1.0)
+// Contrats exports: src/contracts/export/index.ts (Ticket v2, Evidence v2, CSV v1)
+//
+// Ce schéma implémente le système de cache multi-couches par clés déterministes.
+// Immutabilité: les clés (_key) sont UNIQUE et les données associées sont immutables.
+//
+// Principe anti-drift:
+// - Mêmes entrées effectives + mêmes versions ⇒ mêmes keys
+// - HTML report = SSOT, PDF dérivé via Playwright
+// - Evidence-based: aucun ticket sans evidence_refs[] (>= 1)
+// - Aucun nouveau champ export public (Ticket v2/Evidence v2/CSV v1)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// 1. PRODUCTS — Racine "produit normalisé" (SOLO ou DUO)
+// ============================================================================
+// Rôle: Identifier un "même objet" indépendamment des runs
+// Clé déterministe: product_key = hash(mode + normalized_urls + NORMALIZE_VERSION)
+
+model Product {
+  id        String   @id @default(uuid()) @db.Uuid
+  productKey String   @unique @map("product_key") @db.Text
+  
+  // Mode du rapport (SOLO vs DUO)
+  mode      String   @db.Text // solo | duo_ab | duo_before_after
+  
+  // URLs normalisées (JSON selon mode)
+  // SOLO: {"page_a": "url"}
+  // DUO AB: {"page_a": "url1", "page_b": "url2"}
+  // DUO BA: {"before": "url1", "after": "url2"}
+  normalizedUrls Json   @map("normalized_urls") @db.JsonB
+  
+  // Versions SSOT ayant un impact sur product_key
+  versions  Json   @db.JsonB // { "NORMALIZE_VERSION": "1.0", ... }
+  
+  // Canonical input (pour debug/audit)
+  canonicalInput Json   @map("canonical_input") @db.JsonB
+  
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  firstSeenAt DateTime @default(now()) @map("first_seen_at") @db.Timestamptz(3)
+  lastSeenAt DateTime @updatedAt @map("last_seen_at") @db.Timestamptz(3)
+  
+  // Relations
+  snapshots Snapshot[]
+  
+  @@map("products")
+  @@index([productKey])
+  @@index([mode])
+}
+
+// ============================================================================
+// 2. SNAPSHOTS — Capture pack "logique" (agrégation multi-sources pour DUO)
+// ============================================================================
+// Rôle: Pack de capture DOM + screenshots + artefacts
+// Clé déterministe: snapshot_key = hash(product_key + locale + viewports + ENGINE_VERSION)
+
+model Snapshot {
+  id          String   @id @default(uuid()) @db.Uuid
+  snapshotKey String   @unique @map("snapshot_key") @db.Text
+  
+  // Relation vers Product
+  productKey  String   @map("product_key") @db.Text
+  product     Product  @relation(fields: [productKey], references: [productKey], onDelete: Cascade)
+  
+  // Locale (fr, en)
+  locale      String   @db.Text
+  
+  // Viewports (mobile 390×844, desktop 1440×900)
+  viewports   Json     @db.JsonB // { "mobile": {...}, "desktop": {...} }
+  
+  // Métadonnées de capture (UA, profile, etc.)
+  captureMeta Json     @map("capture_meta") @db.JsonB
+  
+  // Versions SSOT ayant un impact sur snapshot_key
+  versions    Json     @db.JsonB // { "ENGINE_VERSION": "1.0", "NORMALIZE_VERSION": "1.0", ... }
+  
+  // Canonical input (pour debug/audit)
+  canonicalInput Json  @map("canonical_input") @db.JsonB
+  
+  // Timestamps
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(3)
+  
+  // Status interne (ok|partial|failed)
+  status      String    @db.Text
+  
+  // Erreurs capture (interne, macro stages)
+  errors      Json      @default("[]") @db.JsonB
+  
+  // Timings (pour observabilité)
+  timingsMs   Json      @default("{}") @map("timings_ms") @db.JsonB
+  
+  // Relations
+  sources     SnapshotSource[]
+  scoreRuns   ScoreRun[]
+  
+  @@map("snapshots")
+  @@index([snapshotKey])
+  @@index([productKey])
+  @@index([locale])
+  @@index([status])
+}
+
+// ============================================================================
+// 3. SNAPSHOT_SOURCES — Détail par source (page_a/page_b/before/after)
+// ============================================================================
+// Rôle: Stocker les artefacts et evidence_completeness PAR SOURCE (SSOT DUO)
+
+model SnapshotSource {
+  id          String   @id @default(uuid()) @db.Uuid
+  
+  // Relation vers Snapshot
+  snapshotKey String   @map("snapshot_key") @db.Text
+  snapshot    Snapshot @relation(fields: [snapshotKey], references: [snapshotKey], onDelete: Cascade)
+  
+  // Source (page_a | page_b | before | after)
+  source      String   @db.Text
+  
+  // URL normalisée utilisée pour cette source
+  url         String   @db.Text
+  
+  // Timestamp de capture (source de vérité pour Evidence.timestamp)
+  capturedAt  DateTime @map("captured_at") @db.Timestamptz(3)
+  
+  // Artefacts disponibles + refs storage internes
+  // { "dom_ref": "...", "screenshot_refs": {...}, "network_log_ref": "...", "lighthouse_ref": "..." }
+  artefacts   Json     @db.JsonB
+  
+  // Evidence completeness PAR SOURCE (complete|partial|insufficient)
+  evidenceCompleteness String @map("evidence_completeness") @db.Text
+  
+  // Missing evidence items (HTML-only au final, mais stock interne utile)
+  // [{ "reason": "blocked_by_cookie_consent", "artifact_name": "screenshot_above_fold" }, ...]
+  missingEvidence Json   @default("[]") @map("missing_evidence") @db.JsonB
+  
+  // Timestamp
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  
+  @@unique([snapshotKey, source])
+  @@map("snapshot_sources")
+  @@index([snapshotKey])
+  @@index([source])
+  @@index([evidenceCompleteness])
+}
+
+// ============================================================================
+// 4. SCORE_RUNS — Résultat scoring déterministe (facts → evidences v2 + tickets v2)
+// ============================================================================
+// Rôle: Stocker le résultat du scoring: Ticket v2[] + Evidence v2[]
+// Clé déterministe: run_key = hash(snapshot_key + DETECTORS_VERSION + SCORING_VERSION + mode)
+
+model ScoreRun {
+  id          String   @id @default(uuid()) @db.Uuid
+  runKey      String   @unique @map("run_key") @db.Text
+  
+  // Relation vers Snapshot
+  snapshotKey String   @map("snapshot_key") @db.Text
+  snapshot    Snapshot @relation(fields: [snapshotKey], references: [snapshotKey], onDelete: Cascade)
+  
+  // Mode (solo|duo_ab|duo_before_after)
+  mode        String   @db.Text
+  
+  // Versions SSOT ayant un impact sur run_key
+  versions    Json     @db.JsonB // { "DETECTORS_VERSION": "1.0", "SCORING_VERSION": "2.2", ... }
+  
+  // Canonical input (pour debug/audit)
+  canonicalInput Json  @map("canonical_input") @db.JsonB
+  
+  // ⚠️ EXPORTS SSOT — Ticket v2[] + Evidence v2[]
+  // Structure: { "tickets": [...], "evidences": [...] }
+  // Validés par src/contracts/export/ticket.v2.ts et evidence.v2.ts
+  // Immutable une fois écrit (auditabilité)
+  exports     Json     @db.JsonB
+  
+  // Erreurs macro (stage pipeline)
+  errors      Json     @default("[]") @db.JsonB
+  
+  // Timings (pour observabilité)
+  timingsMs   Json     @default("{}") @map("timings_ms") @db.JsonB
+  
+  // Timestamps
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(3)
+  
+  // Status interne (ok|degraded|failed)
+  status      String    @db.Text
+  
+  // Relations
+  auditJobs   AuditJob[]
+  
+  @@map("score_runs")
+  @@index([runKey])
+  @@index([snapshotKey])
+  @@index([mode])
+  @@index([status])
+}
+
+// ============================================================================
+// 5. AUDIT_JOBS — HTML SSOT (structure V3.1) + metadata report_meta
+// ============================================================================
+// Rôle: Rapport HTML SSOT (source de vérité unique)
+// Clé déterministe: audit_key = hash(run_key + REPORT_OUTLINE_VERSION + copy_ready + white_label)
+
+model AuditJob {
+  id          String   @id @default(uuid()) @db.Uuid
+  auditKey    String   @unique @map("audit_key") @db.Text
+  
+  // Relation vers ScoreRun (NOT NULL, SSOT DB_SCHEMA §5.5)
+  runKey      String   @map("run_key") @db.Text
+  scoreRun    ScoreRun @relation(fields: [runKey], references: [runKey], onDelete: Cascade)
+  
+  // Mode (solo|duo_ab|duo_before_after)
+  mode        String   @db.Text
+  
+  // Report metadata (evidence_completeness global, alignment_level pour DUO)
+  // SOLO: { "evidence_completeness": "complete|partial|insufficient", "alignment_level": null }
+  // DUO:  { "evidence_completeness": "...", "alignment_level": "high|medium|low" }
+  reportMeta  Json     @map("report_meta") @db.JsonB
+  
+  // Versions SSOT ayant un impact sur audit_key
+  versions    Json     @db.JsonB // { "REPORT_OUTLINE_VERSION": "3.1", ... }
+  
+  // Canonical input (pour debug/audit)
+  canonicalInput Json  @map("canonical_input") @db.JsonB
+  
+  // Storage ref du HTML SSOT
+  htmlRef     String   @map("html_ref") @db.Text
+  
+  // Hash du HTML (détection drift)
+  htmlContentHash String @map("html_content_hash") @db.Text
+  
+  // Timestamps
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(3)
+  
+  // Status interne (ok|degraded|failed)
+  status      String    @db.Text
+  
+  // Erreurs macro (stage pipeline)
+  errors      Json      @default("[]") @db.JsonB
+  
+  // Timings (pour observabilité)
+  timingsMs   Json      @default("{}") @map("timings_ms") @db.JsonB
+  
+  // Relations
+  renders     AuditRender[]
+  
+  @@map("audit_jobs")
+  @@index([auditKey])
+  @@index([runKey])
+  @@index([mode])
+  @@index([status])
+}
+
+// ============================================================================
+// 6. AUDIT_RENDERS — Rendus dérivés: PDF + CSV (best effort)
+// ============================================================================
+// Rôle: Exports dérivés du HTML SSOT (PDF via Playwright, CSV v1)
+// Clé déterministe: render_key = hash(audit_key + RENDER_VERSION + CSV_EXPORT_VERSION)
+
+model AuditRender {
+  id          String   @id @default(uuid()) @db.Uuid
+  renderKey   String   @unique @map("render_key") @db.Text
+  
+  // Relation vers AuditJob
+  auditKey    String   @map("audit_key") @db.Text
+  auditJob    AuditJob @relation(fields: [auditKey], references: [auditKey], onDelete: Cascade)
+  
+  // Versions SSOT ayant un impact sur render_key
+  versions    Json     @db.JsonB // { "RENDER_VERSION": "1.0", "CSV_EXPORT_VERSION": "1", ... }
+  
+  // Canonical input (pour debug/audit)
+  canonicalInput Json  @map("canonical_input") @db.JsonB
+  
+  // Storage refs (nullable si échec)
+  pdfRef      String?  @map("pdf_ref") @db.Text
+  csvRef      String?  @map("csv_ref") @db.Text
+  
+  // Timestamps
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(3)
+  
+  // Status interne (ok|partial|failed)
+  status      String    @db.Text
+  
+  // Erreurs (stage render_pdf|storage|...)
+  errors      Json      @default("[]") @db.JsonB
+  
+  // Timings (pour observabilité)
+  timingsMs   Json      @default("{}") @map("timings_ms") @db.JsonB
+  
+  @@map("audit_renders")
+  @@index([renderKey])
+  @@index([auditKey])
+  @@index([status])
+}
+
+// ============================================================================
+// 7. REQUEST_LOG (Optionnel MVP mais recommandé) — Observabilité + anti-abus
+// ============================================================================
+// Rôle: Tracer les requêtes API sans coupler au cache
+
+model RequestLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  
+  // Request tracking
+  requestId   String   @unique @map("request_id") @db.Text
+  receivedAt  DateTime @default(now()) @map("received_at") @db.Timestamptz(3)
+  
+  // Endpoint (/api/audit-solo | /api/audit-duo)
+  endpoint    String   @db.Text
+  
+  // Hash du payload canonique (debug)
+  requestHash String   @map("request_hash") @db.Text
+  
+  // Clés générées (si connues)
+  keys        Json     @db.JsonB // { "product_key": "...", "snapshot_key": "...", ... }
+  
+  // Status de la requête (ok|error)
+  status      String   @db.Text
+  
+  // HTTP status code
+  httpStatus  Int      @map("http_status") @db.Integer
+  
+  // Error code (nullable)
+  errorCode   String?  @map("error_code") @db.Text
+  
+  // Durée de traitement (ms)
+  durationMs  Int?     @map("duration_ms") @db.Integer
+  
+  @@map("request_log")
+  @@index([requestId])
+  @@index([receivedAt])
+  @@index([endpoint])
+  @@index([status])
+}

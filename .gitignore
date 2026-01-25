@@ -1,5 +1,46 @@
+# macOS
 .DS_Store
+
+# Temporary files
 tmp/
+temp/
+
+# Dependencies
 node_modules/
+
+# Environment variables (secrets)
 .env
 .env.*
+!.env.example
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# TypeScript
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+
+# Prisma
+prisma/migrations/
+!prisma/migrations/.gitkeep
+
+# Vercel
+.vercel
