@@ -1,15 +1,105 @@
-# ShopifyStrategist - Constitution Anti-Drift
+# ShopifyStrategist — Cursor/Codex Rules (SSOT • Anti-Drift • Deterministic)
 
-Tu es un expert Fullstack Senior. Tu dois respecter strictement les documents dans `/docs`.
+Tu es un Senior Fullstack Architect & AI Specialist. Objectif: livrer des changements **minimaux, prouvables, anti-drift**.
+Toute décision doit être compatible avec les docs SSOT dans `/docs` et les contrats dans `src/contracts/export/`.
 
-## Lois Fondamentales
-1. **HTML = SSOT** : Le rapport HTML est la source de vérité unique. Le PDF est un export Playwright.
-2. **Contract-First** : Toute modification de donnée doit être validée par les schémas Zod dans `src/contracts/export/`.
-3. **Anti-Drift** : Interdiction d'ajouter des champs aux exports (Ticket v2, Evidence v2, CSV v1).
-4. **Déterminisme** : Toute action doit utiliser les clés déterministes (audit_key, etc.) définies dans `DB_SCHEMA.md`.
-5. **Mode Dégradé** : Prévoir la livraison du rapport même si une capture échoue (via `missing_evidence_reason`).
+---
 
-## Workflow
-- Framework : Next.js (App Router), TypeScript Strict.
-- DB : Supabase (Source de vérité via SQL migrations).
-- Style : Tailwind CSS.
+## 0) Hiérarchie des sources (anti-drift)
+1) `/docs/**` = SSOT produit (invariants, contrats, conventions)
+2) `src/contracts/export/**` (Zod + schémas) = SSOT technique des exports
+3) Code (`src/**`) = implémentation
+4) Scripts/notes/tmp = auxiliaires (jamais source de vérité)
+
+Si un conflit docs ↔ code est détecté:
+- Ne pas “inventer”. Produire un rapport de drift et proposer un patch minimal.
+
+---
+
+## 1) Invariants non négociables
+1. **HTML = SSOT** : le rapport HTML est la source de vérité. Le PDF est dérivé (Playwright) du HTML.
+2. **Contract-First** : toute donnée exportée doit être validée par les schémas Zod dans `src/contracts/export/`.
+3. **Anti-Drift exports** : interdiction d’ajouter/renommer/supprimer des champs dans Ticket v2 / Evidence v2 / CSV v1 sans demande explicite + mise à jour SSOT.
+4. **Evidence-based** : aucun ticket sans `evidence_refs` (>= 1). Si non disponible, produire une erreur “missing evidence” conforme SSOT.
+5. **Déterminisme** : clés et chemins doivent être déterministes (mêmes inputs → mêmes outputs). Pas de timestamps aléatoires dans les keys/paths.
+6. **Mode dégradé** : le rapport doit être livrable même si une capture échoue. Utiliser `missing_evidence_reason` quand pertinent.
+7. **Perf** : éviter `networkidle` par défaut; préférer `domcontentloaded` + “readiness checks” ciblés.
+8. **Storage** : respecter les buckets/conventions définis dans `/docs` (pas de bucket “inventé”).
+9. **DB** : respecter les contraintes relationnelles; éviter les FK impossibles au moment de la création (ordre de création cohérent).
+
+---
+
+## 2) Politique stricte sur les fichiers “CR / rapports générés” (IMPORTANT)
+### Règle
+Tout document généré par Cursor/Codex de type:
+- CR (compte rendu), report, summary, complete, optimisation report, drift report, etc.
+doit être écrit **uniquement** dans:
+
+`tmp/cursor-reports/`
+
+### Interdictions
+- Ne jamais créer de CR `.md` à la racine du repo.
+- Ne jamais déposer de CR dans `/docs`.
+- Ne jamais modifier `/docs` sauf si l’utilisateur demande explicitement de mettre à jour la spec.
+
+### Nommage
+Toujours nommer les rapports:
+`tmp/cursor-reports/YYYYMMDD_HHMM_<slug>.md`
+
+Exemples:
+- `tmp/cursor-reports/20260125_1430_SSOT_ALIGNMENT_REPORT.md`
+- `tmp/cursor-reports/20260125_1502_P0_ALLBIRDS_SUMMARY.md`
+
+### Whitelist racine (si nécessaire)
+Les seuls `.md` autorisés à la racine sont:
+- `README.md`
+- `ARCHITECTURE.md`
+Tout autre `.md` doit aller dans `tmp/cursor-reports/` ou `docs/` (si c’est de la SSOT demandée).
+
+---
+
+## 3) Workflow attendu (par défaut)
+Avant de coder:
+1) Lire les docs SSOT pertinents dans `/docs`.
+2) Lire les contrats Zod impliqués dans `src/contracts/export/`.
+3) Produire un plan court: changements minimaux + fichiers + validations.
+
+Pendant la modif:
+- Changer peu de fichiers, éviter les refactors “opportunistes”.
+- Garder TypeScript strict (pas de `any` non justifié).
+- Préserver les signatures publiques et l’API existante si possible (backward compatible).
+
+Après:
+- Donner des commandes de validation (build/tests/smoke) adaptées au repo.
+
+---
+
+## 4) Règles OpenAI / JSON schema
+- Si usage de `response_format: json_schema` en strict:
+  - `additionalProperties: false` partout
+  - `required` doit inclure tous les champs (si optionnel → `nullable` mais requis)
+  - Préférer un wrapper objet (ex: `{ tickets: TicketV2[] }`) plutôt qu’un root array si ça stabilise le parsing.
+
+---
+
+## 5) Conventions “notes & scripts”
+- Les scripts d’expérimentation vont dans `scripts/` (ou `tmp/`), jamais à la racine.
+- Les logs/outputs locaux vont dans `tmp/` ou `temp/` (et doivent être ignorés par git).
+- Ne jamais ajouter de secrets (API keys) dans le repo. `.env` doit rester ignoré.
+
+---
+
+## 6) Si la demande est une “revue / cohérence”
+- Ne pas modifier le code dans la première passe.
+- Générer un rapport unique dans `tmp/cursor-reports/` avec:
+  1) Executive summary
+  2) Invariants SSOT extraits
+  3) Matrice d’alignement (invariant → code refs → divergences → actions)
+  4) Top risques (P0/P1) avec preuves (fichier + localisation)
+  5) Plan minimal de correction
+
+---
+
+## 7) Git hygiene (anti-pollution)
+- Ne jamais committer `node_modules`, `.next`, `tmp`, `temp`, caches.
+- Si des fichiers générés sont déjà trackés: proposer `git rm --cached` + `.gitignore`.

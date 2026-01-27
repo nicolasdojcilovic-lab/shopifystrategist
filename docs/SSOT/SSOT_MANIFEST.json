@@ -1,0 +1,20 @@
+{
+    "ssot_language": "en",
+    "docs": [
+      "docs/SSOT/SSOT_CONVENTIONS.md",
+      "docs/SSOT/REGISTRY.md",
+      "docs/SSOT/REPORT_ELITE_REQUIREMENTS.md",
+      "docs/SSOT/SPEC.md",
+      "docs/SSOT/SCORING_AND_DETECTION.md",
+      "docs/SSOT/DETECTORS_SPEC.md",
+      "docs/SSOT/REPORT_OUTLINE.md",
+      "docs/SSOT/API_DOC.md",
+      "docs/SSOT/DB_SCHEMA.md",
+      "docs/SSOT/AUDIT_PIPELINE_SPEC.md",
+      "docs/SSOT/EVIDENCE_PACK_SPEC.md",
+      "docs/SSOT/FIXTURES_AND_ENV_SPEC.md",
+      "docs/SSOT/RUNBOOK_OPERATIONS.md",
+      "docs/SSOT/SMOKE_AND_QA_SPEC.md"
+    ]
+  }
+  

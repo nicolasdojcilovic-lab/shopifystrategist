@@ -44,3 +44,6 @@ prisma/migrations/
 
 # Vercel
 .vercel
+
+# Cursor / Codex reports (generated markdown)
+tmp/cursor-reports/

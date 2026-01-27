@@ -1,62 +1,62 @@
 # ShopifyStrategist — API_DOC.md (SSOT)
 **API_DOC_VERSION :** 1.2  
-**Statut :** SSOT (contrats API publics)  
-**But :** verrouiller les contrats des endpoints d’audit (SOLO + DUO), sans drift, compatibles avec la documentation SSOT.
+**Status :** SSOT (public API contracts)  
+**Goal :** lock the audit endpoint contracts (SOLO + DUO), without drift, compatible with the SSOT documentation.
 
 ---
 
-## 0) Références SSOT (source de vérité)
-Ce document **ne redéfinit pas** : thresholds, keyword lists, enums métier, diversity rules, mapping signal → ticket. Il référence :
-- `docs/SPEC.md`
-- `docs/REPORT_OUTLINE.md` (V3.1)
-- `docs/SCORING_AND_DETECTION.md` (v2.2)
-- `docs/AUDIT_PIPELINE_SPEC.md` (spec v1.0)
-- `docs/DETECTORS_SPEC.md` (v1.3)
-- `docs/EVIDENCE_PACK_SPEC.md` (v1.2)
+## 0) SSOT references (source of truth)
+This document **does not redefine**: thresholds, keyword lists, business enums, diversity rules, signal → ticket mapping. It references:
+- `docs/SSOT/SPEC.md`
+- `docs/SSOT/REPORT_OUTLINE.md` (V3.1)
+- `docs/SSOT/SCORING_AND_DETECTION.md` (v2.2)
+- `docs/SSOT/AUDIT_PIPELINE_SPEC.md` (spec v1.0)
+- `docs/SSOT/DETECTORS_SPEC.md` (v1.3)
+- `docs/SSOT/EVIDENCE_PACK_SPEC.md` (v1.2)
 
 ---
 
-## 1) Invariants (non négociables)
-1) **HTML report = SSOT** ; **PDF** strictement dérivé du HTML (Playwright).
-2) **Evidence-based** : aucun ticket sans `evidence_refs[]` (>= 1).
-3) **No RUM** : métriques perf/poids = lab best-effort ; jamais de “real user metrics”.
-4) **Anti-drift export** : **aucun nouveau champ export** (Ticket v2 / Evidence v2 / CSV v1).
-   - Toute info additionnelle doit rester **interne** ou dans `Evidence.details` (sans changer le schéma export).
-5) **Reasons SSOT (6)** : `missing_evidence_reason` est `null` ou :
+## 1) Invariants (non-negotiable)
+1) **HTML report = SSOT** ; **PDF** strictly derived from the HTML (Playwright).
+2) **Evidence-based**: no ticket without `evidence_refs[]` (>= 1).
+3) **No RUM**: perf/weight metrics = lab best-effort; never “real user metrics”.
+4) **Anti-drift export**: **no new export field** (Ticket v2 / Evidence v2 / CSV v1).
+   - Any additional info MUST remain **internal** or in `Evidence.details` (without changing the export schema).
+5) **SSOT reasons (6)**: `missing_evidence_reason` is `null` or:
    - `blocked_by_cookie_consent`
    - `blocked_by_popup`
    - `infinite_scroll_or_lazyload`
    - `navigation_intercepted`
    - `timeout`
    - `unknown_render_issue`
-6) **Stages macro SSOT** : `errors[].stage` ∈ `normalize|capture|detectors|scoring|report|render_pdf|storage|unknown`.
-7) **Déterminisme** : mêmes entrées effectives + mêmes versions ⇒ mêmes IDs, même tri, mêmes troncatures, mêmes exports.
-8) **DUO** :
-   - `evidence_completeness` est calculé **par source** (`page_a/page_b/before/after`).
-   - la valeur exposée (`report_meta.evidence_completeness`) est le **pire des sources** (`insufficient > partial > complete`).
-   - le détail par source (Missing evidence) reste **HTML-only**.
+6) **SSOT macro stages**: `errors[].stage` ∈ `normalize|capture|detectors|scoring|report|render_pdf|storage|unknown`.
+7) **Determinism**: same effective inputs + same versions ⇒ same IDs, same sorting, same truncations, same exports.
+8) **DUO**:
+   - `evidence_completeness` is computed **per source** (`page_a/page_b/before/after`).
+   - the exposed value (`report_meta.evidence_completeness`) is the **worst of sources** (`insufficient > partial > complete`).
+   - per-source detail (Missing evidence) remains **HTML-only**.
 
 ---
 
 ## 2) Versions & anti-drift
 
-### 2.1 Versions de format (SSOT)
-Ces versions doivent apparaître dans la réponse API (`versions`) et dans la cover du HTML :
+### 2.1 Format versions (SSOT)
+These versions MUST appear in the API response (`versions`) and on the HTML cover:
 - `REPORT_OUTLINE_VERSION = 3.1`
 - `TICKET_SCHEMA_VERSION = 2`
 - `EVIDENCE_SCHEMA_VERSION = 2`
 - `CSV_EXPORT_VERSION = 1`
 - `DETECTORS_SPEC_VERSION = 1.3`
 
-### 2.2 Versions runtime
+### 2.2 Runtime versions
 - `NORMALIZE_VERSION`
 - `SCORING_VERSION`
 - `ENGINE_VERSION`
 - `RENDER_VERSION`
 
-### 2.3 Règles
-- Tout changement de signaux/seuils/mapping/merge/dedup/IDs/tri ⇒ bump `SCORING_VERSION` (voir `SCORING_AND_DETECTION`).
-- Tout changement de structure report ⇒ bump `REPORT_OUTLINE_VERSION`.
+### 2.3 Rules
+- Any change to signals/thresholds/mapping/merge/dedup/IDs/sorting ⇒ bump `SCORING_VERSION` (see `SCORING_AND_DETECTION`).
+- Any change to report structure ⇒ bump `REPORT_OUTLINE_VERSION`.
 
 ---
 
@@ -64,14 +64,14 @@ Ces versions doivent apparaître dans la réponse API (`versions`) et dans la co
 - `POST /api/audit-solo`
 - `POST /api/audit-duo`
 
-Contrat de principe :
-- HTTP 200 si un **HTML SSOT** a été produit (`status="ok"`).
-- HTTP 4xx pour les erreurs de requête.
-- HTTP 500 uniquement si aucun HTML SSOT ne peut être produit.
+Principle contract:
+- HTTP 200 if an **SSOT HTML** was produced (`status="ok"`).
+- HTTP 4xx for request errors.
+- HTTP 500 only if no SSOT HTML can be produced.
 
 ---
 
-## 4) Contrats communs
+## 4) Common contracts
 
 ### 4.1 `mode` (response)
 - `solo`
@@ -79,42 +79,42 @@ Contrat de principe :
 - `duo_before_after`
 
 ### 4.2 `source`
-- Pour `Evidence.source` : `page_a|page_b|before|after` (SSOT)
-- Pour `errors[].source` : `page_a|page_b|before|after|na` (pipeline)
+- For `Evidence.source` : `page_a|page_b|before|after` (SSOT)
+- For `errors[].source` : `page_a|page_b|before|after|na` (pipeline)
 
-> SOLO : la page auditée est portée sous `source="page_a"`.
+> SOLO: the audited page is carried under `source="page_a"`.
 
 ### 4.3 Viewports (SSOT)
 - Mobile : 390×844
 - Desktop : 1440×900
 
 ### 4.4 `report_meta.evidence_completeness`
-- `complete|partial|insufficient` (gating Set A/B, voir `SCORING_AND_DETECTION` v2.2)
+- `complete|partial|insufficient` (Set A/B gating, see `SCORING_AND_DETECTION` v2.2)
 
 ### 4.5 `report_meta.alignment_level`
-- DUO : `high|medium|low` (voir `REPORT_OUTLINE` V3.1)
+- DUO : `high|medium|low` (see `REPORT_OUTLINE` V3.1)
 - SOLO : `null`
 
 ### 4.6 `errors[].stage` (macro enum)
 `normalize|capture|detectors|scoring|report|render_pdf|storage|unknown`
 
-### 4.7 `missing_evidence_reason` (enum fermée)
-`null` ou l’un des 6 enums SSOT (§1.5).
+### 4.7 `missing_evidence_reason` (closed enum)
+`null` or one of the 6 SSOT enums (§1.5).
 
-### 4.8 Headers d’observabilité (best-effort, non contractuels)
-Le serveur **peut** ajouter des headers d’aide au debug/perf (ils ne font pas partie du contrat SSOT et peuvent être absents) :
+### 4.8 Observability headers (best-effort, non-contractual)
+The server **MAY** add debug/perf helper headers (they are not part of the SSOT contract and may be absent):
 - `X-Cache`
 - `X-Cache-Run`
 - `X-Cache-Render`
 - `X-Audit-Timing`
 
-Règle QA : les smoke tests ne doivent **jamais** échouer si ces headers sont manquants.
+QA rule: smoke tests MUST **never** fail if these headers are missing.
 +
 ---
 
-## 5) Response — enveloppes (contrat)
+## 5) Response — envelopes (contract)
 
-### 5.1 Succès : `status="ok"` (HTTP 200)
+### 5.1 Success: `status="ok"` (HTTP 200)
 ```json
 {
   "status": "ok",
@@ -162,15 +162,15 @@ Règle QA : les smoke tests ne doivent **jamais** échouer si ces headers sont m
 }
 ```
 
-Contraintes normatives :
-- `exports.tickets[]` est **Ticket v2** strict (voir `SCORING_AND_DETECTION` v2.2 §3.1).
-- `exports.evidences[]` est **Evidence v2** strict (voir `SCORING_AND_DETECTION` v2.2 §3.2 et `EVIDENCE_PACK_SPEC` v1.2).
-- `artifacts.html_ref` DOIT être présent si `status="ok"` (HTML = SSOT).
-- `artifacts.pdf_ref` et `artifacts.csv_ref` sont **best-effort** et peuvent être `null` si rendu/storage échoue ; dans ce cas, ajouter une entrée correspondante dans `errors[]` (`stage=render_pdf` ou `stage=storage`) **sans empêcher** `status="ok"` tant que `html_ref` existe.
-- Si `artifacts.csv_ref` est non-null, il pointe vers un CSV **CSV_EXPORT_VERSION=1** strict (aucune colonne ajoutée).
-- Si `artifacts.pdf_ref` est non-null, il pointe vers un PDF rendu via Playwright à partir du HTML SSOT (même `audit_key`).
+Normative constraints:
+- `exports.tickets[]` is strict **Ticket v2** (see `SCORING_AND_DETECTION` v2.2 §3.1).
+- `exports.evidences[]` is strict **Evidence v2** (see `SCORING_AND_DETECTION` v2.2 §3.2 and `EVIDENCE_PACK_SPEC` v1.2).
+- `artifacts.html_ref` MUST be present if `status="ok"` (HTML = SSOT).
+- `artifacts.pdf_ref` and `artifacts.csv_ref` are **best-effort** and may be `null` if render/storage fails; in that case, add a corresponding entry in `errors[]` (`stage=render_pdf` or `stage=storage`) **without preventing** `status="ok"` as long as `html_ref` exists.
+- If `artifacts.csv_ref` is non-null, it points to a strict CSV **CSV_EXPORT_VERSION=1** (no added column).
+- If `artifacts.pdf_ref` is non-null, it points to a PDF rendered via Playwright from the SSOT HTML (same `audit_key`).
 
-### 5.2 Erreur request-level : `status="error"` (HTTP 4xx)
+### 5.2 Request-level error: `status="error"` (HTTP 4xx)
 ```json
 {
   "status": "error",
@@ -181,8 +181,8 @@ Contraintes normatives :
 }
 ```
 
-### 5.3 Erreur fatale run-level : `status="error"` (HTTP 500)
-Uniquement si aucun HTML SSOT ne peut être produit.
+### 5.3 Fatal run-level error: `status="error"` (HTTP 500)
+Only if no SSOT HTML can be produced.
 ```json
 {
   "status": "error",
@@ -233,20 +233,20 @@ Uniquement si aucun HTML SSOT ne peut être produit.
 }
 ```
 
-Règles :
-- `locale` (MVP) : `fr|en`, sinon `400 UNSUPPORTED_LOCALE`.
-- Exactement un des champs : `url` **ou** `snapshot_key`.
-- Si `snapshot_key` est fourni, `locale` doit correspondre au snapshot (sinon `400 INVALID_REQUEST`).
-- `options.copy_ready` est optionnel (défaut `false`).
-- `timeouts_ms` est optionnel (défaut : valeurs serveur) ; si présent, toutes les valeurs sont des entiers (ms) ≥ 0.
-- `options.copy_ready=true` :
-  - s’applique uniquement aux **Top 5 tickets** dans le HTML (voir `AUDIT_PIPELINE_SPEC` §11),
-  - **ne change pas** tickets/evidences/tri/IDs/CSV.
-  - peut changer `audit_key` / `render_key` (car le HTML/PDF changent),
-  - ne change pas `run_key`.
+Rules:
+- `locale` (MVP): `fr|en`, otherwise `400 UNSUPPORTED_LOCALE`.
+- Exactly one of: `url` **or** `snapshot_key`.
+- If `snapshot_key` is provided, `locale` MUST match the snapshot (otherwise `400 INVALID_REQUEST`).
+- `options.copy_ready` is optional (default `false`).
+- `timeouts_ms` is optional (default: server values); if present, all values are integers (ms) ≥ 0.
+- `options.copy_ready=true`:
+  - applies only to the **Top 5 tickets** in the HTML (see `AUDIT_PIPELINE_SPEC` §11),
+  - **does not change** tickets/evidences/sorting/IDs/CSV,
+  - may change `audit_key` / `render_key` (because the HTML/PDF change),
+  - does not change `run_key`.
 
-### 6.3 Response (succès “complete”)
-Exemple minimal (1 ticket + 1 evidence).
+### 6.3 Response (success “complete”)
+Minimal example (1 ticket + 1 evidence).
 
 ```json
 {
@@ -340,8 +340,8 @@ Exemple minimal (1 ticket + 1 evidence).
 }
 ```
 
-### 6.4 Response (succès “degraded”)
-Règle : si `artifacts.html_ref` existe ⇒ `status="ok"` même si preuves/artefacts partiels (mode dégradé).
+### 6.4 Response (success “degraded”)
+Rule: if `artifacts.html_ref` exists ⇒ `status="ok"` even if evidence/artifacts are partial (degraded mode).
 
 ```json
 {
@@ -460,15 +460,15 @@ Règle : si `artifacts.html_ref` existe ⇒ `status="ok"` même si preuves/artef
 }
 ```
 
-Règles :
-- `compare_type` ∈ `ab|before_after`, sinon `400 UNSUPPORTED_COMPARE_TYPE`.
-- Si `snapshot_key` est présent, `urls` doit être absent.
-- Si `snapshot_key` est présent, `compare_type` doit être cohérent avec ce snapshot (sinon `400 INVALID_REQUEST`).
-- AB : `urls.page_a` et `urls.page_b` requis.
-- Before/After : `urls.before` et `urls.after` requis.
-- `options.copy_ready` et `timeouts_ms` suivent les mêmes règles que SOLO (§6.2).
+Rules:
+- `compare_type` ∈ `ab|before_after`, otherwise `400 UNSUPPORTED_COMPARE_TYPE`.
+- If `snapshot_key` is present, `urls` MUST be absent.
+- If `snapshot_key` is present, `compare_type` MUST be consistent with that snapshot (otherwise `400 INVALID_REQUEST`).
+- AB: `urls.page_a` and `urls.page_b` required.
+- Before/After: `urls.before` and `urls.after` required.
+- `options.copy_ready` and `timeouts_ms` follow the same rules as SOLO (§6.2).
 
-### 7.4 Response (succès DUO)
+### 7.4 Response (DUO success)
 ```json
 {
   "status": "ok",
@@ -513,7 +513,7 @@ Règles :
 }
 ```
 
-### 7.5 Response (DUO dégradé — evidence insuffisante + alignment low)
+### 7.5 Response (DUO degraded — insufficient evidence + alignment low)
 ```json
 {
   "status": "ok",
@@ -575,17 +575,17 @@ Règles :
 
 ---
 
-## 8) Erreurs (contrat)
+## 8) Errors (contract)
 
 ### 8.1 HTTP status
-- **200** : `status="ok"` (y compris dégradé) si HTML SSOT produit.
-- **400** : payload invalide / enum invalide.
-- **401** : `UNAUTHORIZED` (si auth activée).
-- **403** : `FORBIDDEN_URL` (SSRF / host/protocole interdits).
-- **429** : `RATE_LIMITED`.
-- **500** : `AUDIT_FAILED` (aucun HTML SSOT possible).
+- **200**: `status="ok"` (including degraded) if SSOT HTML is produced.
+- **400**: invalid payload / invalid enum.
+- **401**: `UNAUTHORIZED` (if auth enabled).
+- **403**: `FORBIDDEN_URL` (SSRF / forbidden host/protocol).
+- **429**: `RATE_LIMITED`.
+- **500**: `AUDIT_FAILED` (no SSOT HTML possible).
 
-### 8.2 Codes request-level (minimum)
+### 8.2 Request-level codes (minimum)
 - `INVALID_REQUEST` (400)
 - `UNSUPPORTED_LOCALE` (400)
 - `UNSUPPORTED_COMPARE_TYPE` (400)
@@ -594,16 +594,16 @@ Règles :
 - `UNAUTHORIZED` (401)
 
 ### 8.3 `errors[]` (run-level)
-Format minimal (stable) :
-- `code` (string codifiée)
+Minimal (stable) format:
+- `code` (codified string)
 - `stage` (macro enum)
 - `message` (string)
-- `missing_evidence_reason` (6 enums ou `null`)
+- `missing_evidence_reason` (6 enums or `null`)
 - `source` (`page_a|page_b|before|after|na`)
 
-Note : `missing_evidence_reason` est renseigné uniquement pour les erreurs liées à la preuve/capture ; sinon il DOIT rester `null`.
+Note: `missing_evidence_reason` is filled only for evidence/capture-related errors; otherwise it MUST remain `null`.
 
-### 8.4 Mapping minimal codes → reasons (SSOT)
+### 8.4 Minimal mapping codes → reasons (SSOT)
 | code | missing_evidence_reason |
 |---|---|
 | `CAPTURE_BLOCKED_BY_COOKIE_CONSENT` | `blocked_by_cookie_consent` |
@@ -615,75 +615,75 @@ Note : `missing_evidence_reason` est renseigné uniquement pour les erreurs lié
 
 ---
 
-## 9) Déterminisme (contrat)
+## 9) Determinism (contract)
 
-### 9.1 IDs (rappel)
-Les formats d’IDs sont SSOT et doivent correspondre à `SCORING_AND_DETECTION` v2.2 :
+### 9.1 IDs (reminder)
+ID formats are SSOT and MUST match `SCORING_AND_DETECTION` v2.2:
 - `ticket_id = T_<mode>_<category>_<signal_id>_<scope>_<idx>`
 - `evidence_id = E_<source>_<viewport>_<type>_<label>_<idx>`
 
-### 9.2 Tri stable (tickets) (normatif)
-Conforme `SCORING_AND_DETECTION` v2.2 §5.2 :
-1) `PriorityScore` décroissant  
-2) `impact` décroissant  
-3) `confidence` décroissant  
-4) `effort` croissant  
-5) `risk` croissant  
+### 9.2 Stable sorting (tickets) (normative)
+Per `SCORING_AND_DETECTION` v2.2 §5.2:
+1) `PriorityScore` descending  
+2) `impact` descending  
+3) `confidence` descending  
+4) `effort` ascending  
+5) `risk` ascending  
 6) `ticket_id` asc
 
-### 9.2bis Tri stable (evidences) (normatif)
-Conforme `EVIDENCE_PACK_SPEC` v1.2 §14 :
+### 9.2bis Stable sorting (evidences) (normative)
+Per `EVIDENCE_PACK_SPEC` v1.2 §14:
 1) `source` (page_a, page_b, before, after)
 2) `type` (screenshot, measurement, detection)
 3) `viewport` (mobile, desktop, na)
 4) `label`
 5) `evidence_id`
 
-### 9.3 Troncature (règle dure)
-- Toujours **trier** puis tronquer (N). Jamais de sampling.
-- Si une troncature est appliquée à des listes internes, l’annotation doit rester interne (ex `Evidence.details.truncated=true`).
+### 9.3 Truncation (hard rule)
+- Always **sort** then truncate (N). Never sample.
+- If truncation is applied to internal lists, the annotation MUST remain internal (e.g., `Evidence.details.truncated=true`).
 
-### 9.4 Timestamps (règle dure)
-Conforme `EVIDENCE_PACK_SPEC` v1.2 §8 :
-- `exports.evidences[].timestamp` doit provenir du **snapshot/capture timestamp** de la source (ou de l’artefact si plus précis).
-- Interdit : `now()` au moment du rendu.
+### 9.4 Timestamps (hard rule)
+Per `EVIDENCE_PACK_SPEC` v1.2 §8:
+- `exports.evidences[].timestamp` MUST come from the **snapshot/capture timestamp** of the source (or from the artefact if more precise).
+- Forbidden: `now()` at render time.
 
 ---
 
-## 10) Compatibilité livrable (HTML = SSOT)
+## 10) Deliverable compatibility (HTML = SSOT)
 
-### 10.1 Evidence pack : ancrage (règle dure)
-Conforme `EVIDENCE_PACK_SPEC` v1.2 §6 :
+### 10.1 Evidence pack: anchoring (hard rule)
+Per `EVIDENCE_PACK_SPEC` v1.2 §6:
 - `Evidence.ref = "#evidence-<evidence_id>"`
-- wrapper HTML evidence : `id="evidence-<evidence_id>"`
-- wrapper HTML ticket : `id="ticket-<ticket_id>"`
+- evidence HTML wrapper: `id="evidence-<evidence_id>"`
+- ticket HTML wrapper: `id="ticket-<ticket_id>"`
 
-Tout storage/path/json pointer est autorisé uniquement dans `Evidence.details`.
+Any storage/path/json pointer is allowed only in `Evidence.details`.
 
 ### 10.2 Missing evidence (HTML-only)
-- Le tableau “Missing evidence” détaillé est dans le HTML (SSOT).
-- L’API expose uniquement :
-  - `report_meta.evidence_completeness` (pire des sources en DUO)
-  - `errors[]` avec `source` + `missing_evidence_reason`
+- The detailed “Missing evidence” table is in the HTML (SSOT).
+- The API exposes only:
+  - `report_meta.evidence_completeness` (worst of sources in DUO)
+  - `errors[]` with `source` + `missing_evidence_reason`
 
 ### 10.3 Copy-ready
-Conforme `AUDIT_PIPELINE_SPEC` §11 :
-- `options.copy_ready=true` s’applique uniquement aux **Top 5 tickets** (HTML).
-- Les exports `tickets/evidences/csv` restent identiques (IDs/ordre/contenu export).
+Per `AUDIT_PIPELINE_SPEC` §11:
+- `options.copy_ready=true` applies only to the **Top 5 tickets** (HTML).
+- Exports `tickets/evidences/csv` remain identical (IDs/order/export content).
 
 ---
 
 ## 11) DoD (Definition of Done) — API (release gate)
-- [ ] Endpoints : `POST /api/audit-solo` + `POST /api/audit-duo` (AB + Before/After).
-- [ ] Validation stricte des payloads : 400 sur payload invalide / enum invalide.
-- [ ] `versions` exposées et cohérentes : 3.1 / 2 / 2 / 1 / 1.3 + versions runtime.
-- [ ] `report_meta.evidence_completeness` conforme gating Set A/B ; DUO = pire des sources.
-- [ ] `report_meta.alignment_level=null` en SOLO ; `high|medium|low` en DUO.
-- [ ] Exports stricts : Ticket v2 / Evidence v2 / CSV v1 ; **aucun champ/colonne ajoutée**.
-- [ ] `Evidence.ref` et wrappers HTML conformes (`evidence-*`, `ticket-*`).
-- [ ] Tri stable tickets conforme `SCORING_AND_DETECTION` §5.2.
-- [ ] Tri stable evidences conforme `EVIDENCE_PACK_SPEC` §14.
-- [ ] `exports.evidences[].timestamp` issu du snapshot/capture (jamais `now()` au rendu).
-- [ ] `missing_evidence_reason` ∈ 6 enums SSOT (ou `null`), jamais autre chose.
-- [ ] Mode dégradé : si HTML SSOT produit ⇒ `status="ok"` + `errors[]` (limitations explicites).
-- [ ] Smoke : SOLO + DUO AB + DUO BA ; cas cookie/popup/timeout/navigation_intercept ; rerun via `snapshot_key` ⇒ mêmes IDs/ordre.
+- [ ] Endpoints: `POST /api/audit-solo` + `POST /api/audit-duo` (AB + Before/After).
+- [ ] Strict payload validation: 400 on invalid payload / invalid enum.
+- [ ] `versions` exposed and consistent: 3.1 / 2 / 2 / 1 / 1.3 + runtime versions.
+- [ ] `report_meta.evidence_completeness` matches Set A/B gating; DUO = worst of sources.
+- [ ] `report_meta.alignment_level=null` in SOLO; `high|medium|low` in DUO.
+- [ ] Strict exports: Ticket v2 / Evidence v2 / CSV v1; **no added field/column**.
+- [ ] `Evidence.ref` and HTML wrappers compliant (`evidence-*`, `ticket-*`).
+- [ ] Stable ticket sorting per `SCORING_AND_DETECTION` §5.2.
+- [ ] Stable evidence sorting per `EVIDENCE_PACK_SPEC` §14.
+- [ ] `exports.evidences[].timestamp` from snapshot/capture (never `now()` at render).
+- [ ] `missing_evidence_reason` ∈ 6 SSOT enums (or `null`), never anything else.
+- [ ] Degraded mode: if SSOT HTML produced ⇒ `status="ok"` + `errors[]` (explicit limitations).
+- [ ] Smoke: SOLO + DUO AB + DUO BA; cookie/popup/timeout/navigation_intercept cases; rerun via `snapshot_key` ⇒ same IDs/order.
