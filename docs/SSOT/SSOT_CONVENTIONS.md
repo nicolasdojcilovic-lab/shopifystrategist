@@ -1,3 +1,10 @@
+# SSOT Conventions (v1.0)
+## Owned Concepts (Canonical)
+- TBD
+
+## Not Owned (References)
+- TBD
+
 ## SSOT Language Policy (MUST)
 
 ### SSOT documents language

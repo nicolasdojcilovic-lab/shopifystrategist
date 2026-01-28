@@ -1,5 +1,11 @@
 # ShopifyStrategist — DB_SCHEMA.md (SSOT)
 
+## Owned Concepts (Canonical)
+- TBD
+
+## Not Owned (References)
+- TBD
+
 **DB_SCHEMA_VERSION:** 1.0  
 **Status:** SSOT (DB schema + deterministic keys + anti-drift invariants)  
 **Target:** Supabase (Postgres + Storage)

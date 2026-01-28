@@ -1,5 +1,11 @@
 # ShopifyStrategist — SMOKE_AND_QA_SPEC.md (SSOT)
 
+## Owned Concepts (Canonical)
+- TBD
+
+## Not Owned (References)
+- TBD
+
 - **SMOKE_AND_QA_SPEC_VERSION :** 1.2
 - **Goal :** Define the **smoke tests** and **QA gates** that guarantee anti-drift on the API and deliverables (**HTML SSOT**, **PDF strictly derived**, CSV v1, Ticket/Evidence v2 exports).
 - **Scope :** A test contract (no code), focused on:

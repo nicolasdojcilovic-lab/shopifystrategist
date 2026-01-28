@@ -1,20 +1,391 @@
 {
-    "ssot_language": "en",
-    "docs": [
-      "docs/SSOT/SSOT_CONVENTIONS.md",
-      "docs/SSOT/REGISTRY.md",
-      "docs/SSOT/REPORT_ELITE_REQUIREMENTS.md",
-      "docs/SSOT/SPEC.md",
-      "docs/SSOT/SCORING_AND_DETECTION.md",
-      "docs/SSOT/DETECTORS_SPEC.md",
-      "docs/SSOT/REPORT_OUTLINE.md",
-      "docs/SSOT/API_DOC.md",
-      "docs/SSOT/DB_SCHEMA.md",
-      "docs/SSOT/AUDIT_PIPELINE_SPEC.md",
-      "docs/SSOT/EVIDENCE_PACK_SPEC.md",
-      "docs/SSOT/FIXTURES_AND_ENV_SPEC.md",
-      "docs/SSOT/RUNBOOK_OPERATIONS.md",
-      "docs/SSOT/SMOKE_AND_QA_SPEC.md"
+  "manifest_version": "1.0",
+  "project": "ShopifyStrategist",
+  "ssot_folder": "docs/SSOT",
+  "language": "en",
+  "meta_files": {
+    "index": "SSOT_INDEX.md",
+    "manifest": "SSOT_MANIFEST.json"
+  },
+  "authority": {
+    "precedence_order": [
+      {
+        "rank": 1,
+        "file": "REPORT_ELITE_REQUIREMENTS.md",
+        "label": "Product Final Spec (elite report acceptance contracts)",
+        "normative": true
+      },
+      {
+        "rank": 2,
+        "file": "REGISTRY.md",
+        "label": "Registry (closed lists: taxonomy/criteria/rules/templates + gating)",
+        "normative": true
+      },
+      {
+        "rank": 3,
+        "file": "SPEC.md",
+        "label": "System spec (global invariants and architecture contracts)",
+        "normative": true
+      },
+      {
+        "rank": 4,
+        "file": "SCORING_AND_DETECTION.md",
+        "label": "Scoring + traceability contract",
+        "normative": true
+      },
+      {
+        "rank": 5,
+        "file": "DETECTORS_SPEC.md",
+        "label": "Detectors contract",
+        "normative": true
+      },
+      {
+        "rank": 6,
+        "file": "EVIDENCE_PACK_SPEC.md",
+        "label": "Evidence + proof pack contract",
+        "normative": true
+      },
+      {
+        "rank": 7,
+        "file": "REPORT_OUTLINE.md",
+        "label": "Report structure contract (HTML as SSOT output shape)",
+        "normative": true
+      },
+      {
+        "rank": 8,
+        "file": "AUDIT_PIPELINE_SPEC.md",
+        "label": "Pipeline stages + budgets + degradation contract",
+        "normative": true
+      },
+      {
+        "rank": 9,
+        "file": "API_DOC.md",
+        "label": "Public API contract",
+        "normative": true
+      },
+      {
+        "rank": 10,
+        "file": "DB_SCHEMA.md",
+        "label": "Persistence + deterministic keys contract",
+        "normative": true
+      },
+      {
+        "rank": 11,
+        "file": "SMOKE_AND_QA_SPEC.md",
+        "label": "QA + non-regression gates contract",
+        "normative": true
+      },
+      {
+        "rank": 12,
+        "file": "FIXTURES_AND_ENV_SPEC.md",
+        "label": "Fixtures + environment reproducibility contract",
+        "normative": true
+      },
+      {
+        "rank": 13,
+        "file": "RUNBOOK_OPERATIONS.md",
+        "label": "Operations runbook (operational guidance)",
+        "normative": false
+      },
+      {
+        "rank": 14,
+        "file": "SSOT_CONVENTIONS.md",
+        "label": "SSOT conventions (meta rules)",
+        "normative": true
+      }
+    ],
+    "conflict_policy": {
+      "rule": "Higher rank wins",
+      "tie_breaker": "If same rank, more specific contract wins; otherwise create an explicit patch/decision entry",
+      "unresolved_action": "Add a decision to SSOT_INDEX.md and patch the losing doc(s) to remove ambiguity"
+    }
+  },
+  "docs": [
+    {
+      "doc_id": "SSOT-001",
+      "file": "REPORT_ELITE_REQUIREMENTS.md",
+      "title": "Report Elite Requirements",
+      "category": "core_product_contract",
+      "normative": true,
+      "authority_rank": 1,
+      "version": "1.9",
+      "scope_modes": [
+        "SOLO_INSTANT",
+        "SOLO_CLIENT_READY",
+        "DUO_AB",
+        "DUO_BEFORE_AFTER"
+      ],
+      "depends_on": [
+        "REGISTRY.md",
+        "REPORT_OUTLINE.md",
+        "EVIDENCE_PACK_SPEC.md"
+      ]
+    },
+    {
+      "doc_id": "SSOT-002",
+      "file": "REGISTRY.md",
+      "title": "Registry",
+      "category": "core_product_contract",
+      "normative": true,
+      "authority_rank": 2,
+      "version": "1.0",
+      "scope_modes": [
+        "SOLO_INSTANT",
+        "SOLO_CLIENT_READY",
+        "DUO_AB",
+        "DUO_BEFORE_AFTER"
+      ],
+      "depends_on": []
+    },
+    {
+      "doc_id": "SSOT-003",
+      "file": "SPEC.md",
+      "title": "System Spec",
+      "category": "system_contract",
+      "normative": true,
+      "authority_rank": 3,
+      "version": null,
+      "scope_modes": [
+        "SOLO_INSTANT",
+        "SOLO_CLIENT_READY",
+        "DUO_AB",
+        "DUO_BEFORE_AFTER"
+      ],
+      "depends_on": [
+        "REPORT_ELITE_REQUIREMENTS.md",
+        "REGISTRY.md"
+      ]
+    },
+    {
+      "doc_id": "SSOT-004",
+      "file": "SCORING_AND_DETECTION.md",
+      "title": "Scoring and Detection",
+      "category": "scoring_detection",
+      "normative": true,
+      "authority_rank": 4,
+      "version": "2.3",
+      "scope_modes": [
+        "SOLO_INSTANT",
+        "SOLO_CLIENT_READY",
+        "DUO_AB",
+        "DUO_BEFORE_AFTER"
+      ],
+      "depends_on": [
+        "REGISTRY.md"
+      ]
+    },
+    {
+      "doc_id": "SSOT-005",
+      "file": "DETECTORS_SPEC.md",
+      "title": "Detectors Spec",
+      "category": "scoring_detection",
+      "normative": true,
+      "authority_rank": 5,
+      "version": null,
+      "scope_modes": [
+        "SOLO_INSTANT",
+        "SOLO_CLIENT_READY",
+        "DUO_AB",
+        "DUO_BEFORE_AFTER"
+      ],
+      "depends_on": [
+        "REGISTRY.md",
+        "EVIDENCE_PACK_SPEC.md"
+      ]
+    },
+    {
+      "doc_id": "SSOT-006",
+      "file": "EVIDENCE_PACK_SPEC.md",
+      "title": "Evidence Pack Spec",
+      "category": "evidence_output",
+      "normative": true,
+      "authority_rank": 6,
+      "version": null,
+      "scope_modes": [
+        "SOLO_INSTANT",
+        "SOLO_CLIENT_READY",
+        "DUO_AB",
+        "DUO_BEFORE_AFTER"
+      ],
+      "depends_on": [
+        "REGISTRY.md"
+      ]
+    },
+    {
+      "doc_id": "SSOT-007",
+      "file": "REPORT_OUTLINE.md",
+      "title": "Report Outline",
+      "category": "evidence_output",
+      "normative": true,
+      "authority_rank": 7,
+      "version": "3.1",
+      "scope_modes": [
+        "SOLO_INSTANT",
+        "SOLO_CLIENT_READY",
+        "DUO_AB",
+        "DUO_BEFORE_AFTER"
+      ],
+      "depends_on": [
+        "REPORT_ELITE_REQUIREMENTS.md",
+        "REGISTRY.md",
+        "EVIDENCE_PACK_SPEC.md"
+      ]
+    },
+    {
+      "doc_id": "SSOT-008",
+      "file": "AUDIT_PIPELINE_SPEC.md",
+      "title": "Audit Pipeline Spec",
+      "category": "pipeline_execution",
+      "normative": true,
+      "authority_rank": 8,
+      "version": null,
+      "scope_modes": [
+        "SOLO_INSTANT",
+        "SOLO_CLIENT_READY",
+        "DUO_AB",
+        "DUO_BEFORE_AFTER"
+      ],
+      "depends_on": [
+        "REPORT_ELITE_REQUIREMENTS.md",
+        "REGISTRY.md",
+        "SCORING_AND_DETECTION.md"
+      ]
+    },
+    {
+      "doc_id": "SSOT-009",
+      "file": "API_DOC.md",
+      "title": "API Doc",
+      "category": "interfaces_storage",
+      "normative": true,
+      "authority_rank": 9,
+      "version": null,
+      "scope_modes": [
+        "SOLO_INSTANT",
+        "SOLO_CLIENT_READY",
+        "DUO_AB",
+        "DUO_BEFORE_AFTER"
+      ],
+      "depends_on": [
+        "SPEC.md",
+        "REGISTRY.md"
+      ]
+    },
+    {
+      "doc_id": "SSOT-010",
+      "file": "DB_SCHEMA.md",
+      "title": "DB Schema",
+      "category": "interfaces_storage",
+      "normative": true,
+      "authority_rank": 10,
+      "version": null,
+      "scope_modes": [
+        "SOLO_INSTANT",
+        "SOLO_CLIENT_READY",
+        "DUO_AB",
+        "DUO_BEFORE_AFTER"
+      ],
+      "depends_on": [
+        "SPEC.md"
+      ]
+    },
+    {
+      "doc_id": "SSOT-011",
+      "file": "SMOKE_AND_QA_SPEC.md",
+      "title": "Smoke and QA Spec",
+      "category": "qa_validation",
+      "normative": true,
+      "authority_rank": 11,
+      "version": null,
+      "scope_modes": [
+        "SOLO_INSTANT",
+        "SOLO_CLIENT_READY",
+        "DUO_AB",
+        "DUO_BEFORE_AFTER"
+      ],
+      "depends_on": [
+        "REPORT_ELITE_REQUIREMENTS.md",
+        "REGISTRY.md",
+        "AUDIT_PIPELINE_SPEC.md",
+        "API_DOC.md"
+      ]
+    },
+    {
+      "doc_id": "SSOT-012",
+      "file": "FIXTURES_AND_ENV_SPEC.md",
+      "title": "Fixtures and Environment Spec",
+      "category": "qa_validation",
+      "normative": true,
+      "authority_rank": 12,
+      "version": null,
+      "scope_modes": [
+        "SOLO_INSTANT",
+        "SOLO_CLIENT_READY",
+        "DUO_AB",
+        "DUO_BEFORE_AFTER"
+      ],
+      "depends_on": [
+        "SMOKE_AND_QA_SPEC.md"
+      ]
+    },
+    {
+      "doc_id": "SSOT-013",
+      "file": "RUNBOOK_OPERATIONS.md",
+      "title": "Runbook Operations",
+      "category": "operations",
+      "normative": false,
+      "authority_rank": 13,
+      "version": null,
+      "scope_modes": [
+        "SOLO_INSTANT",
+        "SOLO_CLIENT_READY",
+        "DUO_AB",
+        "DUO_BEFORE_AFTER"
+      ],
+      "depends_on": [
+        "SPEC.md",
+        "DB_SCHEMA.md"
+      ]
+    },
+    {
+      "doc_id": "SSOT-014",
+      "file": "SSOT_CONVENTIONS.md",
+      "title": "SSOT Conventions",
+      "category": "meta",
+      "normative": true,
+      "authority_rank": 14,
+      "version": "1.0",
+      "scope_modes": [
+        "SOLO_INSTANT",
+        "SOLO_CLIENT_READY",
+        "DUO_AB",
+        "DUO_BEFORE_AFTER"
+      ],
+      "depends_on": []
+    }
+  ],
+  "quality_gates": {
+    "en_only": true,
+    "must_live_in_ssot_folder": true,
+    "files_must_match_manifest_list": true,
+    "recommended_doc_header": "Each doc should start with a single H1 and optionally include (vX.Y) in the title",
+    "recommended_id_prefixes": [
+      "REQ-",
+      "DET-",
+      "SC-",
+      "RULE-",
+      "CRIT-",
+      "TPL-",
+      "EV-"
+    ],
+    "registry_ids_are_closed_lists": true
+  },
+  "alignment_artifacts": {
+    "recommended": [
+      "TRACEABILITY_MATRIX.md",
+      "ALIGNMENT_REPORT.md"
+    ],
+    "optional": [
+      "DECISIONS.md"
     ]
   }
-  
+}

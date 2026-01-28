@@ -1,4 +1,10 @@
 # ShopifyStrategist — REPORT_OUTLINE.md (SSOT-aligned) — V3.1
+## Owned Concepts (Canonical)
+- TBD
+
+## Not Owned (References)
+- TBD
+
 **Purpose:** freeze the “agency-grade” deliverable (structure + rules + formats) to prevent drift and reduce support.  
 **SSOT:** the **HTML report** is the source of truth; the **PDF** is a strict (Playwright) rendering of the HTML.
 

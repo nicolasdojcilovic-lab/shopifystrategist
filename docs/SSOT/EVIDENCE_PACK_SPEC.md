@@ -1,5 +1,11 @@
 # ShopifyStrategist — EVIDENCE_PACK_SPEC.md (SSOT-aligned)
 
+## Owned Concepts (Canonical)
+- TBD
+
+## Not Owned (References)
+- TBD
+
 **EVIDENCE_PACK_SPEC_VERSION:** 1.2  
 **Status:** SSOT (EvidenceBuilder + HTML rendering "Evidence pack")  
 **Owner:** Nicolas  

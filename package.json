@@ -7,6 +7,9 @@
   "directories": {
     "doc": "docs"
   },
+  "overrides": {
+    "esbuild": "0.25.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -38,7 +41,11 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "ssot:sync": "node scripts/ssot/sync.mjs",
+    "ssot:check": "node scripts/ssot/check.mjs",
+    "ssot:normalize": "node scripts/ssot/normalize.mjs",
+    "prepare": "husky"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.18",
@@ -47,7 +54,7 @@
     "ai": "^6.0.49",
     "cheerio": "^1.2.0",
     "dotenv": "^16.6.1",
-    "next": "^14.2.0",
+    "next": "^15.5.10",
     "openai": "^6.16.0",
     "playwright": "^1.40.0",
     "react": "^18.3.0",
@@ -56,13 +63,14 @@
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
-    "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.32",
-    "tailwindcss": "^3.4.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
     "@vitest/ui": "^1.2.0",
+    "autoprefixer": "^10.4.16",
+    "husky": "^9.1.7",
+    "postcss": "^8.4.32",
     "prisma": "^5.9.0",
+    "tailwindcss": "^3.4.0",
     "tsx": "^4.7.0",
     "typescript": "^5.5.0",
     "vitest": "^1.2.0"

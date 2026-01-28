@@ -1,5 +1,11 @@
 # REGISTRY.md (v1.0) — Elite Lock (SSOT)
 
+## Owned Concepts (Canonical)
+- TBD
+
+## Not Owned (References)
+- TBD
+
 ## Role
 This file is the **source of truth** for:
 - The **taxonomy** (`subject_key`, `root_cause_key`)

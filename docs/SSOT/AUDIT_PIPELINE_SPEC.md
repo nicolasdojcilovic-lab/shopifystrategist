@@ -1,4 +1,10 @@
 # ShopifyStrategist - AUDIT_PIPELINE_SPEC.md
+## Owned Concepts (Canonical)
+- TBD
+
+## Not Owned (References)
+- TBD
+
 **Spec version:** 1.0  
 **Status:** SSOT (orchestration specification)  
 **Goal:** Lock the end-to-end pipeline **without drift**: snapshot → detectors (facts) → scoring (evidences+tickets) → HTML report (SSOT) → PDF (Playwright) → CSV v1.  

@@ -1,5 +1,11 @@
 # REPORT_ELITE_REQUIREMENTS.md (v1.9)
 
+## Owned Concepts (Canonical)
+- TBD
+
+## Not Owned (References)
+- TBD
+
 ## Objective
 Produce a Shopify audit report at an **elite level**: “agency-grade”, sendable as-is, **client-safe**, robust in degraded mode, and **reproducible**.
 

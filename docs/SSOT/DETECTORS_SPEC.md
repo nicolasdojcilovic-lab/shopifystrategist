@@ -1,5 +1,11 @@
 # ShopifyStrategist — DETECTORS_SPEC.md (SSOT-aligned)
 
+## Owned Concepts (Canonical)
+- TBD
+
+## Not Owned (References)
+- TBD
+
 **Role:** SSOT specification of the *facts layer* (detectors) — **MVP**
 
 - **DETECTORS_SPEC_VERSION :** 1.3

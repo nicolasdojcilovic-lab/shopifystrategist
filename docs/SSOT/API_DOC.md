@@ -1,4 +1,10 @@
 # ShopifyStrategist — API_DOC.md (SSOT)
+## Owned Concepts (Canonical)
+- TBD
+
+## Not Owned (References)
+- TBD
+
 **API_DOC_VERSION :** 1.2  
 **Status :** SSOT (public API contracts)  
 **Goal :** lock the audit endpoint contracts (SOLO + DUO), without drift, compatible with the SSOT documentation.

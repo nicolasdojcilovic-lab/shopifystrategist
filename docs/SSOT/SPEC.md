@@ -1,4 +1,10 @@
 # ShopifyStrategist — SPEC.md (SSOT)
+## Owned Concepts (Canonical)
+- TBD
+
+## Not Owned (References)
+- TBD
+
 **Status:** SSOT (Single Source Of Truth = single source of truth)  
 **Owner:** Nicolas  
 **Objective:** “Funnel” document (market → product → deliverable → components) aligning **product ↔ implementation ↔ tests**.

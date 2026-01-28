@@ -1,5 +1,11 @@
 # ShopifyStrategist — RUNBOOK_OPERATIONS.md (SSOT)
 
+## Owned Concepts (Canonical)
+- TBD
+
+## Not Owned (References)
+- TBD
+
 - **RUNBOOK_OPERATIONS_VERSION:** 1.2
 - **Objective:** operational runbook to minimize support, prevent drift, and guarantee an “agency-grade” deliverable **even in degraded mode**.
 - **Principle:** this document **does not redefine** SSOT rules; it **references** them and locks operational practices.

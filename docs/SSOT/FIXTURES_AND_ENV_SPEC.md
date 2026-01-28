@@ -1,5 +1,11 @@
 # ShopifyStrategist — FIXTURES_AND_ENV_SPEC.md (SSOT)
 
+## Owned Concepts (Canonical)
+- TBD
+
+## Not Owned (References)
+- TBD
+
 - **FIXTURES_AND_ENV_SPEC_VERSION:** 1.2
 - **Objectif:** définir un pack de fixtures stables + une interface d’environnement pour exécuter les smoke tests de manière déterministe, anti-flaky, et anti-drift.
 - **Portée:** fixtures + conventions d’exécution + artefacts attendus. Pas de code.

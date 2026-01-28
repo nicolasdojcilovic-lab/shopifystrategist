@@ -1,4 +1,10 @@
 # ShopifyStrategist — SCORING_AND_DETECTION.md (SSOT) — v2.3
+## Owned Concepts (Canonical)
+- TBD
+
+## Not Owned (References)
+- TBD
+
 **Status:** SSOT  
 **Owner:** Nicolas  
 **Purpose:** Define an **operational** detection system (signals) + mapping signal → ticket(s) + evidence + prioritization, without drift, compliant with:
