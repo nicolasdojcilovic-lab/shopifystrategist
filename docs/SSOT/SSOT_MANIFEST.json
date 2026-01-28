@@ -7,6 +7,10 @@
     "index": "SSOT_INDEX.md",
     "manifest": "SSOT_MANIFEST.json"
   },
+  "generated_artifacts": {
+    "traceability_matrix": "TRACEABILITY_MATRIX.md",
+    "drift_gates": "DRIFT_GATES.md"
+  },
   "authority": {
     "precedence_order": [
       {
@@ -97,7 +101,7 @@
     "conflict_policy": {
       "rule": "Higher rank wins",
       "tie_breaker": "If same rank, more specific contract wins; otherwise create an explicit patch/decision entry",
-      "unresolved_action": "Add a decision to SSOT_INDEX.md and patch the losing doc(s) to remove ambiguity"
+      "unresolved_action": "Add a decision to DECISIONS.md and patch the losing doc(s) to remove ambiguity"
     }
   },
   "docs": [
@@ -382,10 +386,9 @@
   "alignment_artifacts": {
     "recommended": [
       "TRACEABILITY_MATRIX.md",
-      "ALIGNMENT_REPORT.md"
-    ],
-    "optional": [
+      "ALIGNMENT_REPORT.md",
       "DECISIONS.md"
-    ]
+    ],
+    "optional": []
   }
 }

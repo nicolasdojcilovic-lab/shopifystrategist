@@ -44,6 +44,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "ssot:sync": "node scripts/ssot/sync.mjs",
     "ssot:check": "node scripts/ssot/check.mjs",
+    "ssot:validate": "SSOT_STRICT=1 node scripts/SSOT/check.mjs",
     "ssot:normalize": "node scripts/ssot/normalize.mjs",
     "prepare": "husky"
   },

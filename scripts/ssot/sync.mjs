@@ -83,11 +83,11 @@ Generated at: ${now}
 When two docs conflict, higher authority wins.
 
 ${byRank
-  .map(
-    (x) =>
-      `${x.rank}. **${x.file}** — ${x.label || ""}${x.normative === false ? " _(non-normative)_" : ""}`
-  )
-  .join("\n")}
+      .map(
+        (x) =>
+          `${x.rank}. **${x.file}** — ${x.label || ""}${x.normative === false ? " _(non-normative)_" : ""}`
+      )
+      .join("\n")}
 
 Conflict policy:
 - Rule: ${manifest.authority?.conflict_policy?.rule || "Higher rank wins"}
@@ -100,12 +100,12 @@ Conflict policy:
 | DocID | File | Title | Category | Normative | Authority | Version |
 |------:|------|-------|----------|:---------:|----------:|:-------:|
 ${docs
-  .map((d) => {
-    const v = d.version ?? "";
-    const t = (d.title ?? "").replace(/\|/g, "\\|");
-    return `| ${d.doc_id} | ${d.file} | ${t} | ${d.category || ""} | ${d.normative ? "Yes" : "No"} | ${d.authority_rank ?? ""} | ${v} |`;
-  })
-  .join("\n")}
+      .map((d) => {
+        const v = d.version ?? "";
+        const t = (d.title ?? "").replace(/\|/g, "\\|");
+        return `| ${d.doc_id} | ${d.file} | ${t} | ${d.category || ""} | ${d.normative ? "Yes" : "No"} | ${d.authority_rank ?? ""} | ${v} |`;
+      })
+      .join("\n")}
 
 ---
 
@@ -123,7 +123,7 @@ ${docs
 - QA scenarios / gates → **SMOKE_AND_QA_SPEC.md**
 - Fixtures / env reproducibility → **FIXTURES_AND_ENV_SPEC.md**
 - Operations only → **RUNBOOK_OPERATIONS.md**
-- Meta conventions → **SSOT_CONVENTIONS.md**
+- Meta conventions → **DECISIONS.md**
 `;
 }
 

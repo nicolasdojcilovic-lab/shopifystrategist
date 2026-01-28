@@ -3,6 +3,7 @@ import path from "node:path";
 
 const SSOT_DIR = path.join(process.cwd(), "docs", "SSOT");
 const MANIFEST_PATH = path.join(SSOT_DIR, "SSOT_MANIFEST.json");
+const STRICT = process.env.SSOT_STRICT === "1";
 
 const COMMON_FR = [
   " le ", " la ", " les ", " des ", " du ", " une ", " un ", " et ", " ou ",
@@ -28,46 +29,104 @@ async function readJson(p) {
   return JSON.parse(raw);
 }
 
+function objectStringValues(obj) {
+  if (!obj || typeof obj !== "object") return [];
+  return Object.values(obj).filter((v) => typeof v === "string" && v.length > 0);
+}
+
+async function fileExists(p) {
+  try {
+    await fs.access(p);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function main() {
   const manifest = await readJson(MANIFEST_PATH);
+
   const docs = manifest.docs || [];
   const errors = [];
   const warnings = [];
 
-  // Check doc files exist + basic lint
+  const docFiles = docs.map((d) => d.file).filter(Boolean);
+
+  const metaFiles = objectStringValues(manifest.meta_files);
+  const generatedFiles = objectStringValues(manifest.generated_artifacts);
+
+  const alignmentFiles = [
+    ...(manifest.alignment_artifacts?.recommended || []),
+    ...(manifest.alignment_artifacts?.optional || [])
+  ];
+  const allowedFiles = new Set([...docFiles, ...metaFiles, ...generatedFiles, ...alignmentFiles]);
+
+  // 1) Check SSOT contract docs (manifest.docs): strict checks
   for (const d of docs) {
     const p = path.join(SSOT_DIR, d.file);
     let md;
+
     try {
       md = await fs.readFile(p, "utf-8");
     } catch {
-      errors.push(`Missing file: docs/SSOT/${d.file}`);
+      errors.push(`Missing SSOT doc file (manifest.docs): docs/SSOT/${d.file}`);
       continue;
     }
 
     if (!hasH1(md)) errors.push(`No H1 title (# ...) in ${d.file}`);
 
-    // EN-only heuristic (warn by default; you can flip to error if you want strict)
+    // EN-only heuristic for contract docs only
     if (manifest.language === "en" && looksFrench(md)) {
       warnings.push(`Looks non-EN (heuristic) in ${d.file}`);
     }
 
-    // Recommended sections (warn only)
+    // Recommended sections for contract docs only
     const lower = md.toLowerCase();
     if (!lower.includes("owned concepts") || !lower.includes("not owned")) {
       warnings.push(`Recommended sections missing in ${d.file}: "Owned Concepts" / "Not Owned"`);
     }
   }
 
-  // Manifest ↔ folder consistency (only checks missing, not extras)
+  // 2) Check meta_files: must exist (errors) + H1 if markdown
+  for (const f of metaFiles) {
+    const p = path.join(SSOT_DIR, f);
+    const exists = await fileExists(p);
+    if (!exists) {
+      errors.push(`Missing meta file (manifest.meta_files): docs/SSOT/${f}`);
+      continue;
+    }
+
+    if (f.endsWith(".md")) {
+      const md = await fs.readFile(p, "utf-8");
+      if (!hasH1(md)) errors.push(`No H1 title (# ...) in meta file: ${f}`);
+    }
+  }
+
+  // 3) Check generated_artifacts: warn if missing + H1 if markdown and exists
+  for (const f of generatedFiles) {
+    const p = path.join(SSOT_DIR, f);
+    const exists = await fileExists(p);
+
+    if (!exists) {
+      warnings.push(`Generated artifact missing (manifest.generated_artifacts): ${f}`);
+      continue;
+    }
+
+    if (f.endsWith(".md")) {
+      const md = await fs.readFile(p, "utf-8");
+      if (!hasH1(md)) warnings.push(`No H1 title (# ...) in generated artifact: ${f}`);
+    }
+  }
+
+  // 4) Folder consistency: warn if there are .md not referenced anywhere
   const ssotFiles = await fs.readdir(SSOT_DIR);
   const mdFiles = ssotFiles.filter((f) => f.endsWith(".md"));
-  const manifestFiles = new Set(docs.map((d) => d.file));
 
   for (const f of mdFiles) {
-    // ignore generated or meta files if you want, but keep it visible as warning
-    if (!manifestFiles.has(f) && !["SSOT_INDEX.md", "TRACEABILITY_MATRIX.md", "DRIFT_GATES.md"].includes(f)) {
-      warnings.push(`MD file not in manifest: ${f}`);
+    if (!allowedFiles.has(f)) {
+      const msg = `MD file not referenced in manifest (docs/meta/generated/alignment): ${f}`;
+      if (STRICT) errors.push(msg);
+      else warnings.push(msg);
     }
   }
 

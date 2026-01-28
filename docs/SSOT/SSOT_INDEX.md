@@ -5,7 +5,7 @@
 Navigation + governance index for the SSOT set.
 Generated from `SSOT_MANIFEST.json`.
 
-Generated at: 2026-01-28T09:46:10.425Z
+Generated at: 2026-01-28T12:18:00.175Z
 
 ---
 
@@ -36,7 +36,7 @@ When two docs conflict, higher authority wins.
 Conflict policy:
 - Rule: Higher rank wins
 - Tie-breaker: If same rank, more specific contract wins; otherwise create an explicit patch/decision entry
-- Unresolved action: Add a decision to SSOT_INDEX.md and patch the losing doc(s) to remove ambiguity
+- Unresolved action: Add a decision to DECISIONS.md and patch the losing doc(s) to remove ambiguity
 
 ---
 
@@ -74,4 +74,4 @@ Conflict policy:
 - QA scenarios / gates → **SMOKE_AND_QA_SPEC.md**
 - Fixtures / env reproducibility → **FIXTURES_AND_ENV_SPEC.md**
 - Operations only → **RUNBOOK_OPERATIONS.md**
-- Meta conventions → **SSOT_CONVENTIONS.md**
+- Meta conventions → **DECISIONS.md**
