@@ -5,7 +5,8 @@
  */
 
 import 'dotenv/config';
-import { writeFileSync } from 'fs';
+import { writeFileSync, mkdirSync } from 'fs';
+import { dirname } from 'path';
 import { AuditService } from '../src/core/pipeline/audit.service.js';
 import { generateHtmlReport } from '../src/core/pipeline/report-generator.js';
 import { prisma } from '../src/lib/prisma.js';
@@ -14,8 +15,8 @@ async function main() {
   console.log('Test HTML Report Generator\n');
   console.log('='.repeat(60));
   
-  // Test avec une vraie PDP Shopify
-  const testUrl = 'https://www.allbirds.com/products/mens-tree-runners';
+  // Test avec une PDP Shopify (Gymshark par défaut pour validation agency-grade; override via TEST_URL)
+  const testUrl = process.env.TEST_URL || 'https://fr.gymshark.com/products/gymshark-straight-leg-pumper-pants-pants';
   
   console.log(`\nURL de test: ${testUrl}`);
   console.log('Lancement de l audit complet...\n');
@@ -30,6 +31,17 @@ async function main() {
     });
     
     const duration = Date.now() - startTime;
+
+    if (result.status === 'failed') {
+      console.error('\n' + '='.repeat(60));
+      console.error('AUDIT ÉCHOUÉ — Erreurs:');
+      console.error('='.repeat(60));
+      for (const err of result.errors) {
+        console.error(`  [${err.stage || '?'}] ${err.code || ''}: ${err.message || 'Unknown'}`);
+      }
+      console.error('\n');
+      process.exit(1);
+    }
     
     console.log('\n' + '='.repeat(60));
     console.log('Audit termine avec succes !');
@@ -78,6 +90,7 @@ async function main() {
     
     // Étape 4: Sauvegarder le rapport
     const outputPath = `./temp/report-${Date.now()}.html`;
+    mkdirSync(dirname(outputPath), { recursive: true });
     writeFileSync(outputPath, reportResult.html, 'utf8');
     
     console.log(`\nRapport sauvegarde: ${outputPath}`);

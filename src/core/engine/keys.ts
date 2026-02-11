@@ -1,20 +1,20 @@
 /**
- * ⚠️ SYSTÈME DE CLÉS DÉTERMINISTES (SSOT)
+ * ⚠️ DETERMINISTIC KEYS SYSTEM (SSOT)
  * 
- * Ce fichier est le cœur du système de cache multi-couches.
- * Référence: docs/DB_SCHEMA.md sections 3 & 4
+ * This file is the core of the multi-layer cache system.
+ * Reference: docs/DB_SCHEMA.md sections 3 & 4
  * 
- * Principe fondamental (anti-drift) :
- * - Mêmes entrées effectives + mêmes versions → mêmes clés
- * - Les clés sont dérivées de JSON canoniques (tri stable) + SHA-256
- * - Aucune dépendance à now() ou ordre non-stable
+ * Fundamental principle (anti-drift):
+ * - Same effective inputs + same versions → same keys
+ * - Keys are derived from canonical JSON (stable sort) + SHA-256
+ * - No dependency on now() or non-stable order
  * 
- * Couches du cache :
- * 1. product_key → Produit normalisé (URL + mode)
- * 2. snapshot_key → Capture (DOM + screenshots + artefacts)
+ * Cache layers:
+ * 1. product_key → Normalized product (URL + mode)
+ * 2. snapshot_key → Capture (DOM + screenshots + artifacts)
  * 3. run_key → Scoring (facts → evidences + tickets)
- * 4. audit_key → Rapport HTML (SSOT)
- * 5. render_key → Rendus dérivés (PDF + CSV)
+ * 4. audit_key → HTML report (SSOT)
+ * 5. render_key → Derived renders (PDF + CSV)
  * 
  * @version DB_SCHEMA_VERSION = 1.0
  * @reference docs/DB_SCHEMA.md
@@ -42,24 +42,24 @@ export type Mode = 'solo' | 'duo_ab' | 'duo_before_after';
 export type PageSource = 'page_a' | 'page_b' | 'before' | 'after';
 
 /**
- * Normaliser une URL (règle SSOT — Version Radicale pour PDP Shopify)
+ * Normalizes a URL (SSOT rule — Radical Version for Shopify PDP)
  * 
- * Transformations appliquées :
- * 1. Conversion en minuscule
- * 2. Suppression de TOUS les query parameters (tout après le ?)
- * 3. Suppression des ancres (#)
- * 4. Suppression du slash final
+ * Applied transformations:
+ * 1. Convert to lowercase
+ * 2. Remove ALL query parameters (everything after ?)
+ * 3. Remove anchors (#)
+ * 4. Remove trailing slash
  * 
- * ⚠️ RÈGLE STRICTE : Une PDP Shopify est identifiée uniquement par :
- * - Son domaine (ex: fr.gymshark.com)
- * - Son chemin (ex: /products/gymshark-crest-straight-leg-joggers-black-aw23)
+ * ⚠️ STRICT RULE: A Shopify PDP is identified solely by:
+ * - Its domain (e.g., fr.gymshark.com)
+ * - Its path (e.g., /products/gymshark-crest-straight-leg-joggers-black-aw23)
  * 
- * Les variants, couleurs, tailles sont considérés comme le MÊME produit.
+ * Variants, colors, sizes are considered the SAME product.
  * 
- * Référence: docs/DB_SCHEMA.md section 4.2
+ * Reference: docs/DB_SCHEMA.md section 4.2
  * 
- * @param url - URL brute à normaliser
- * @returns URL normalisée (déterministe)
+ * @param url - Raw URL to normalize
+ * @returns Normalized URL (deterministic)
  * 
  * @example
  * normalizeUrl('https://Example.com/Product/?variant=123&utm_source=fb#reviews/')
@@ -70,47 +70,47 @@ export function normalizeUrl(url: string): string {
     // Parse URL
     const parsed = new URL(url);
 
-    // 1. Minuscule (host + pathname)
+    // 1. Lowercase (host + pathname)
     const host = parsed.hostname.toLowerCase();
     const pathname = parsed.pathname.toLowerCase();
 
-    // 2. Reconstruction : UNIQUEMENT protocol + host + pathname
-    // Tous les query params sont supprimés (pas de search, pas d'ancre)
+    // 2. Reconstruction: ONLY protocol + host + pathname
+    // All query params are removed (no search, no anchor)
     let normalized = `${parsed.protocol}//${host}${pathname}`;
 
-    // 3. Retirer slash final (sauf si c'est juste le root /)
+    // 3. Remove trailing slash (except if it's just root /)
     if (normalized.endsWith('/') && normalized !== `${parsed.protocol}//${host}/`) {
       normalized = normalized.slice(0, -1);
     }
 
     return normalized;
   } catch (error) {
-    // Si URL invalide, retourner telle quelle (le caller devra gérer)
-    // En production, cela devrait être logué/remonté
+    // If invalid URL, return as-is (caller must handle)
+    // In production, this should be logged/reported
     return url.toLowerCase().replace(/\/$/, '');
   }
 }
 
 /**
- * Générer un hash SHA-256 (hex) à partir d'une string
+ * Generates SHA-256 hash (hex) from a string
  * 
- * @param input - String à hasher
- * @returns Hash SHA-256 en hexadécimal (64 caractères)
+ * @param input - String to hash
+ * @returns SHA-256 hash in hexadecimal (64 characters)
  */
 function sha256(input: string): string {
   return createHash('sha256').update(input, 'utf8').digest('hex');
 }
 
 /**
- * Générer un JSON canonique (tri stable des clés)
+ * Generates canonical JSON (stable key sort)
  * 
- * Garantit que le même objet produit toujours le même JSON.
+ * Ensures the same object always produces the same JSON.
  * 
- * @param obj - Objet à sérialiser
- * @returns JSON canonique (clés triées)
+ * @param obj - Object to serialize
+ * @returns Canonical JSON (sorted keys)
  */
 function canonicalJSON(obj: Record<string, unknown>): string {
-  // Trier les clés récursivement
+  // Sort keys recursively
   const sorted = Object.keys(obj)
     .sort()
     .reduce((acc, key) => {
@@ -119,7 +119,7 @@ function canonicalJSON(obj: Record<string, unknown>): string {
       if (value && typeof value === 'object' && !Array.isArray(value)) {
         acc[key] = JSON.parse(canonicalJSON(value as Record<string, unknown>));
       } else if (Array.isArray(value)) {
-        // Arrays : préserver l'ordre (supposé sémantique)
+        // Arrays: preserve order (assumed semantic)
         acc[key] = value;
       } else {
         acc[key] = value;
@@ -132,36 +132,36 @@ function canonicalJSON(obj: Record<string, unknown>): string {
 }
 
 /**
- * Générer une clé avec préfixe
+ * Generates a key with prefix
  * 
- * Format: <prefix>_<hash_8_premiers_chars>
+ * Format: <prefix>_<hash_first_8_chars>
  * 
- * @param prefix - Préfixe (ex: 'prod', 'snap', 'run')
- * @param canonical - JSON canonique
- * @returns Clé complète (prefix + hash tronqué)
+ * @param prefix - Prefix (e.g., 'prod', 'snap', 'run')
+ * @param canonical - Canonical JSON
+ * @returns Complete key (prefix + truncated hash)
  */
 function generateKey(prefix: string, canonical: string): string {
   const hash = sha256(canonical);
-  // Garder 16 caractères du hash (64 bits d'entropie)
+  // Keep 16 characters of hash (64 bits entropy)
   return `${prefix}_${hash.substring(0, 16)}`;
 }
 
 /**
- * Générer product_key (couche 1)
+ * Generates product_key (layer 1)
  * 
- * Identifie un "même objet" indépendamment des runs.
+ * Identifies a "same object" independently of runs.
  * 
- * Canonical input :
+ * Canonical input:
  * - mode (solo|duo_ab|duo_before_after)
- * - normalized_urls (selon mode)
+ * - normalized_urls (according to mode)
  * - NORMALIZE_VERSION
  * 
- * ⚠️ RÈGLE SSOT : locale n'entre PAS dans product_key
- * La séparation par langue vit au niveau snapshot_key
+ * ⚠️ SSOT RULE: locale does NOT enter product_key
+ * Language separation lives at snapshot_key level
  * 
- * Référence: docs/DB_SCHEMA.md section 4.2
+ * Reference: docs/DB_SCHEMA.md section 4.2
  * 
- * @param params - Paramètres du produit
+ * @param params - Product parameters
  * @returns product_key (format: prod_<hash>)
  * 
  * @example
@@ -188,7 +188,7 @@ export function generateProductKey(params: {
 }): string {
   const { mode, urls } = params;
 
-  // Normaliser toutes les URLs
+  // Normalize all URLs
   const normalizedUrls: Record<string, string> = {};
   
   for (const [source, url] of Object.entries(urls)) {
@@ -208,19 +208,19 @@ export function generateProductKey(params: {
 }
 
 /**
- * Générer snapshot_key (couche 2)
+ * Generates snapshot_key (layer 2)
  * 
- * Identifie un pack de capture : DOM + screenshots + artefacts.
+ * Identifies a capture pack: DOM + screenshots + artifacts.
  * 
- * Canonical input :
+ * Canonical input:
  * - product_key
  * - locale
  * - viewports (mobile 390×844, desktop 1440×900)
  * - engine_version
  * 
- * Référence: docs/DB_SCHEMA.md section 4.3
+ * Reference: docs/DB_SCHEMA.md section 4.3
  * 
- * @param params - Paramètres de snapshot
+ * @param params - Snapshot parameters
  * @returns snapshot_key (format: snap_<hash>)
  * 
  * @example
@@ -256,19 +256,19 @@ export function generateSnapshotKey(params: {
 }
 
 /**
- * Générer run_key (couche 3)
+ * Generates run_key (layer 3)
  * 
- * Identifie un résultat de scoring : facts → evidences v2 + tickets v2.
+ * Identifies a scoring result: facts → evidences v2 + tickets v2.
  * 
- * Canonical input :
+ * Canonical input:
  * - snapshot_key
  * - detectors_version
  * - scoring_version
  * - mode
  * 
- * Référence: docs/DB_SCHEMA.md section 4.4
+ * Reference: docs/DB_SCHEMA.md section 4.4
  * 
- * @param params - Paramètres de run
+ * @param params - Run parameters
  * @returns run_key (format: run_<hash>)
  * 
  * @example
@@ -296,19 +296,19 @@ export function generateRunKey(params: {
 }
 
 /**
- * Générer audit_key (couche 4)
+ * Generates audit_key (layer 4)
  * 
- * Identifie un rapport HTML SSOT (structure V3.1 + contenus).
+ * Identifies an SSOT HTML report (V3.1 structure + content).
  * 
- * Canonical input :
+ * Canonical input:
  * - run_key
  * - report_outline_version
- * - copy_ready (car change le HTML)
- * - white_label (si activé)
+ * - copy_ready (because it changes HTML)
+ * - white_label (if enabled)
  * 
- * Référence: docs/DB_SCHEMA.md section 4.5
+ * Reference: docs/DB_SCHEMA.md section 4.5
  * 
- * @param params - Paramètres d'audit
+ * @param params - Audit parameters
  * @returns audit_key (format: audit_<hash>)
  * 
  * @example
@@ -342,18 +342,18 @@ export function generateAuditKey(params: {
 }
 
 /**
- * Générer render_key (couche 5)
+ * Generates render_key (layer 5)
  * 
- * Identifie les rendus dérivés : PDF + CSV.
+ * Identifies derived renders: PDF + CSV.
  * 
- * Canonical input :
+ * Canonical input:
  * - audit_key
  * - render_version
  * - csv_export_version
  * 
- * Référence: docs/DB_SCHEMA.md section 4.6
+ * Reference: docs/DB_SCHEMA.md section 4.6
  * 
- * @param params - Paramètres de render
+ * @param params - Render parameters
  * @returns render_key (format: render_<hash>)
  * 
  * @example
@@ -378,14 +378,14 @@ export function generateRenderKey(params: {
 }
 
 /**
- * Extraire le canonical input d'une clé (pour debug/audit)
+ * Extracts canonical input from a key (for debug/audit)
  * 
- * ⚠️ Impossible de retrouver l'input original depuis le hash !
- * Cette fonction est un placeholder pour documentation.
- * En production, stocker `canonical_input` en DB.
+ * ⚠️ Impossible to recover original input from hash!
+ * This function is a placeholder for documentation.
+ * In production, store `canonical_input` in DB.
  * 
- * @param key - Clé à analyser
- * @returns Informations sur la clé
+ * @param key - Key to analyze
+ * @returns Key information
  */
 export function analyzeKey(key: string): {
   prefix: string;

@@ -1,16 +1,16 @@
 /**
  * ⚠️ PDF GENERATOR (Playwright-based)
  * 
- * Ce module génère des PDF agency-grade à partir du rapport HTML.
+ * This module generates agency-grade PDFs from the HTML report.
  * 
- * Principes:
- * - PDF = Rendu strict du HTML (SSOT)
- * - Format A4, printBackground: true
- * - Gestion des coupures de page (CSS break-inside-avoid)
- * - Upload vers Supabase (bucket pdf-reports)
- * - Cache par audit_key (si PDF existe, retourne URL)
+ * Principles:
+ * - PDF = Strict rendering of HTML (SSOT)
+ * - A4 format, printBackground: true
+ * - Page break handling (CSS break-inside-avoid)
+ * - Upload to Supabase (pdf-reports bucket)
+ * - Cache by audit_key (if PDF exists, returns URL)
  * 
- * Référence:
+ * Reference:
  * - docs/REPORT_OUTLINE.md (v3.1)
  * - Playwright PDF API
  * 
@@ -33,7 +33,7 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 /**
- * Options de génération PDF
+ * PDF generation options
  */
 export interface PdfOptions {
   format?: 'A4' | 'Letter';
@@ -50,7 +50,7 @@ export interface PdfOptions {
 }
 
 /**
- * Résultat de génération PDF
+ * PDF generation result
  */
 export interface PdfResult {
   buffer: Buffer;
@@ -63,7 +63,7 @@ export interface PdfResult {
 }
 
 /**
- * Résultat d'upload Supabase
+ * Supabase upload result
  */
 export interface UploadResult {
   publicUrl: string;
@@ -79,11 +79,11 @@ export class PdfGenerator {
   private browser: Browser | null = null;
 
   /**
-   * Initialise le navigateur Playwright
+   * Initializes Playwright browser
    */
   async initialize(): Promise<void> {
     if (!this.browser) {
-      console.log('🌐 Initialisation du navigateur Playwright...');
+      console.log('🌐 Initializing Playwright browser...');
       this.browser = await chromium.launch({
         headless: true,
         args: [
@@ -92,18 +92,18 @@ export class PdfGenerator {
           '--disable-dev-shm-usage',
         ],
       });
-      console.log('✅ Navigateur Playwright initialisé');
+      console.log('✅ Playwright browser initialized');
     }
   }
 
   /**
-   * Ferme le navigateur
+   * Closes browser
    */
   async close(): Promise<void> {
     if (this.browser) {
       await this.browser.close();
       this.browser = null;
-      console.log('🔒 Navigateur Playwright fermé');
+      console.log('🔒 Playwright browser closed');
     }
   }
 
@@ -124,21 +124,27 @@ export class PdfGenerator {
       throw new Error('Browser not initialized');
     }
 
-    console.log('📄 Génération du PDF...');
+    console.log('📄 Generating PDF...');
+
+    // Test hook: force PDF failure to validate degraded-mode behavior (REQ-001-B)
+    if (process.env.PDF_RENDER_DISABLED === '1') {
+      throw new Error('PDF rendering disabled (PDF_RENDER_DISABLED=1)');
+    }
+
 
     const page: Page = await this.browser.newPage();
 
     try {
-      // Charger le HTML
+      // Load HTML
       await page.setContent(htmlContent, {
         waitUntil: 'networkidle',
         timeout: 30000,
       });
 
-      // Attendre que Tailwind CDN soit chargé
+      // Wait for Tailwind CDN to load
       await page.waitForTimeout(2000);
 
-      // Configuration PDF (SSOT)
+      // PDF configuration (SSOT)
       const pdfBuffer = await page.pdf({
         format: options.format || 'A4',
         printBackground: true,
@@ -157,11 +163,11 @@ export class PdfGenerator {
 
       const buffer = Buffer.from(pdfBuffer);
 
-      // Estimation du nombre de pages (approximatif)
+      // Page count estimation (approximate)
       // A4 = 595x842 points, 1 page ~ 200KB compressed
       const estimatedPages = Math.max(1, Math.ceil(buffer.length / 200000));
 
-      console.log(`✅ PDF généré: ${(buffer.length / 1024).toFixed(2)} KB (${estimatedPages} pages estimées)`);
+      console.log(`✅ PDF generated: ${(buffer.length / 1024).toFixed(2)} KB (${estimatedPages} estimated pages)`);
 
       return {
         buffer,
@@ -178,10 +184,10 @@ export class PdfGenerator {
   }
 
   /**
-   * Vérifie si un PDF existe déjà dans Supabase (Cache Check)
+   * Checks if a PDF already exists in Supabase (Cache Check)
    * 
-   * @param auditKey - Clé d'audit déterministe
-   * @returns URL publique si existe, null sinon
+   * @param auditKey - Deterministic audit key
+   * @returns Public URL if exists, null otherwise
    */
   async checkPdfCache(auditKey: string): Promise<string | null> {
     const path = `${auditKey}.pdf`;
@@ -195,7 +201,7 @@ export class PdfGenerator {
         });
 
       if (error) {
-        console.error('⚠️  Erreur lors de la vérification du cache PDF:', error);
+        console.error('⚠️  Error checking PDF cache:', error);
         return null;
       }
 
@@ -205,47 +211,47 @@ export class PdfGenerator {
           .from('pdf-reports')
           .getPublicUrl(path);
 
-        console.log(`✅ Cache Hit: PDF trouvé (${path})`);
+        console.log(`✅ Cache Hit: PDF found (${path})`);
         return urlData.publicUrl;
       }
 
-      console.log(`⚠️  Cache Miss: PDF non trouvé (${path})`);
+      console.log(`⚠️  Cache Miss: PDF not found (${path})`);
       return null;
     } catch (error) {
-      console.error('⚠️  Erreur lors de la vérification du cache PDF:', error);
+      console.error('⚠️  Error checking PDF cache:', error);
       return null;
     }
   }
 
   /**
-   * Upload le PDF vers Supabase Storage
+   * Uploads PDF to Supabase Storage
    * 
-   * @param pdfBuffer - Buffer du PDF
-   * @param auditKey - Clé d'audit déterministe
-   * @returns Résultat d'upload avec URL publique
+   * @param pdfBuffer - PDF buffer
+   * @param auditKey - Deterministic audit key
+   * @returns Upload result with public URL
    */
   async uploadToSupabase(
     pdfBuffer: Buffer,
     auditKey: string
   ): Promise<UploadResult> {
-    console.log('☁️  Upload du PDF vers Supabase...');
+    console.log('☁️  Uploading PDF to Supabase...');
 
     const path = `${auditKey}.pdf`;
 
     try {
-      // Vérifier si le bucket existe, sinon le créer
+      // Check if bucket exists, create if not
       const { data: buckets } = await supabase.storage.listBuckets();
       const pdfBucketExists = buckets?.some((b) => b.name === 'pdf-reports');
 
       if (!pdfBucketExists) {
-        console.log('📦 Création du bucket pdf-reports...');
+        console.log('📦 Creating pdf-reports bucket...');
         await supabase.storage.createBucket('pdf-reports', {
           public: true,
           fileSizeLimit: 52428800, // 50MB
         });
       }
 
-      // Upload du PDF
+      // Upload PDF
       const { data, error } = await supabase.storage
         .from('pdf-reports')
         .upload(path, pdfBuffer, {
@@ -257,12 +263,12 @@ export class PdfGenerator {
         throw new Error(`Supabase upload error: ${error.message}`);
       }
 
-      // Récupérer l'URL publique
+      // Get public URL
       const { data: urlData } = supabase.storage
         .from('pdf-reports')
         .getPublicUrl(path);
 
-      console.log(`✅ PDF uploadé: ${urlData.publicUrl}`);
+      console.log(`✅ PDF uploaded: ${urlData.publicUrl}`);
 
       return {
         publicUrl: urlData.publicUrl,
@@ -271,31 +277,31 @@ export class PdfGenerator {
         uploadedAt: new Date().toISOString(),
       };
     } catch (error) {
-      console.error('❌ Erreur lors de l\'upload du PDF:', error);
+      console.error('❌ Error uploading PDF:', error);
       throw error;
     }
   }
 
   /**
-   * Génère et upload le PDF en une seule opération
+   * Generates and uploads PDF in a single operation
    * 
-   * @param htmlContent - Contenu HTML complet
-   * @param auditKey - Clé d'audit déterministe
-   * @param options - Options de génération PDF
-   * @returns URL publique du PDF
+   * @param htmlContent - Complete HTML content
+   * @param auditKey - Deterministic audit key
+   * @param options - PDF generation options
+   * @returns Public URL of PDF
    */
   async generateAndUpload(
     htmlContent: string,
     auditKey: string,
     options: PdfOptions = {}
   ): Promise<{ publicUrl: string; fromCache: boolean }> {
-    // Vérifier le cache
+    // Check cache
     const cachedUrl = await this.checkPdfCache(auditKey);
     if (cachedUrl) {
       return { publicUrl: cachedUrl, fromCache: true };
     }
 
-    // Générer le PDF
+    // Generate PDF
     const pdfResult = await this.generatePdf(htmlContent, options);
 
     // Upload vers Supabase
@@ -311,7 +317,7 @@ export class PdfGenerator {
 let pdfGenerator: PdfGenerator | null = null;
 
 /**
- * Récupère l'instance singleton du PDF Generator
+ * Gets the singleton instance of PDF Generator
  */
 export function getPdfGenerator(): PdfGenerator {
   if (!pdfGenerator) {
@@ -321,7 +327,7 @@ export function getPdfGenerator(): PdfGenerator {
 }
 
 /**
- * Ferme l'instance singleton (cleanup)
+ * Closes singleton instance (cleanup)
  */
 export async function closePdfGenerator(): Promise<void> {
   if (pdfGenerator) {

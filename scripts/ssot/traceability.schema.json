@@ -1,0 +1,36 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "req_id": { "type": "string" },
+          "requirement": { "type": "string" },
+          "spec_refs": { "type": "array", "items": { "type": "string" } },
+          "ssot_refs": { "type": "array", "items": { "type": "string" } },
+          "registry_refs": { "type": "array", "items": { "type": "string" } },
+          "code_refs": { "type": "array", "items": { "type": "string" } },
+          "smoke_refs": { "type": "array", "items": { "type": "string" } },
+          "status": { "type": "string", "enum": ["OK", "GAP", "CONFLICT", "TBD"] },
+          "notes": { "type": "string" }
+        },
+        "required": [
+          "req_id",
+          "requirement",
+          "spec_refs",
+          "ssot_refs",
+          "registry_refs",
+          "code_refs",
+          "smoke_refs",
+          "status",
+          "notes"
+        ]
+      }
+    }
+  },
+  "required": ["rows"]
+}

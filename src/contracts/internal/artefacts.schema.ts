@@ -1,18 +1,18 @@
 /**
  * ⚠️ ARTEFACTS SCHEMA (SSOT Internal)
- * 
- * Ce schéma Zod définit la structure exacte du champ JSON `artefacts`
- * dans la table `snapshot_sources` (Prisma).
- * 
- * Objectif:
- * - Validation runtime avant persistence
- * - Type safety pour les artefacts
- * - Réutilisable par ScoringEngine et Detectors
- * 
- * Référence:
+ *
+ * This Zod schema defines the exact structure of the JSON `artefacts` field
+ * in the `snapshot_sources` table (Prisma).
+ *
+ * Purpose:
+ * - Runtime validation before persistence
+ * - Type safety for artefacts
+ * - Reusable by ScoringEngine and Detectors
+ *
+ * Reference:
  * - docs/DB_SCHEMA.md (SnapshotSource.artefacts)
  * - src/core/engine/facts-collector.ts (ShopifyFacts)
- * 
+ *
  * @version ARTEFACTS_SCHEMA_VERSION = 1.0
  */
 
@@ -45,7 +45,7 @@ const HtmlRefsSchema = z.object({
 });
 
 /**
- * PDP Facts (aligné avec facts-collector.ts)
+ * PDP Facts (aligned with facts-collector.ts)
  */
 const PDPFactsSchema = z.object({
   title: z.string().nullable(),
@@ -93,8 +93,8 @@ const TechnicalFactsSchema = z.object({
   detectedApps: z.array(z.string()),
   hasGoogleAnalytics: z.boolean(),
   hasFacebookPixel: z.boolean(),
-  scriptCount: z.number().int().min(0).optional(), // Optional pour éviter crash si compteur manquant
-  externalScriptCount: z.number().int().min(0).optional(), // Optional pour éviter crash
+  scriptCount: z.number().int().min(0).optional(), // Optional to avoid crash if counter missing
+  externalScriptCount: z.number().int().min(0).optional(), // Optional to avoid crash
 });
 
 /**
@@ -116,19 +116,19 @@ export const ShopifyFactsSchema = z.object({
 
 /**
  * Artefacts Schema (SSOT)
- * 
- * Structure complète du champ JSON `artefacts` en DB.
+ *
+ * Complete structure of the JSON `artefacts` field in DB.
  */
 export const ArtefactsSchema = z.object({
   screenshot_refs: ScreenshotRefsSchema,
   html_refs: HtmlRefsSchema,
   
-  // Facts collectés (optionnel si collection échoue)
+  // Collected facts (optional if collection fails)
   facts: ShopifyFactsSchema.nullable(),
   facts_version: z.string().nullable(),
   facts_collected_at: z.string().datetime().nullable(),
   
-  // Métadonnées additionnelles (optionnelles)
+  // Additional metadata (optional)
   html_hash: z.string().optional(),
   capture_metadata: z
     .object({
@@ -140,20 +140,20 @@ export const ArtefactsSchema = z.object({
 });
 
 /**
- * Type TypeScript dérivé du schéma
+ * TypeScript type derived from schema
  */
 export type Artefacts = z.infer<typeof ArtefactsSchema>;
 export type ShopifyFacts = z.infer<typeof ShopifyFactsSchema>;
 
 /**
- * Helper de validation
+ * Validation helper
  */
 export function validateArtefacts(data: unknown): Artefacts {
   return ArtefactsSchema.parse(data);
 }
 
 /**
- * Helper de validation safe (ne throw pas)
+ * Safe validation helper (does not throw)
  */
 export function validateArtefactsSafe(
   data: unknown

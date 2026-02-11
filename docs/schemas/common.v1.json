@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shopifystrategist.app/schemas/common.v1.json",
+  "title": "Common Primitives v1",
+  "description": "Primitives de base (IDs, Pillars, Owners, Evidence)",
+  "$defs": {
+    "ticket_id_pattern": {
+      "type": "string",
+      "pattern": "^T_(solo|duo_ab|duo_before_after)_[a-z_]+_[A-Z0-9_]+_(pdp|page_a|page_b|gap|before|after|diff)_\\d{2}$"
+    },
+    "evidence_id_pattern": {
+      "type": "string",
+      "pattern": "^E_[a-z_]+_(mobile|desktop|na)_[a-z]+_[a-z_]+_\\d{2}$"
+    },
+    "fact_id_pattern": {
+      "type": "string",
+      "pattern": "^F_[a-z_]+_[a-z_]+_\\d{2}$"
+    },
+    "criteria_id": {
+      "type": "string",
+      "enum": [
+        "C.CORE.CTA",
+        "C.CORE.PRICE_CLARITY",
+        "C.CORE.VARIANTS",
+        "C.CORE.SHIPPING_RETURNS",
+        "C.CORE.TRUST",
+        "C.PERS.VALUE_PROP",
+        "C.PERS.BENEFITS",
+        "C.PERS.SOCIAL_PROOF",
+        "C.PERS.FAQ_OBJECTIONS",
+        "C.PERS.SIZING_FIT",
+        "C.TECH.PERF_LAB",
+        "C.TECH.MOBILE_UX",
+        "C.SEO.METADATA",
+        "C.SEO.STRUCTURED_DATA",
+        "C.SEO.INDEXABILITY"
+      ]
+    },
+    "rule_id": {
+      "type": "string",
+      "pattern": "^R\\.[A-Z]+\\.([A-Z_]+)\\.([A-Z_]+)$"
+    },
+    "pillar": {
+      "type": "string",
+      "enum": ["offer_clarity", "trust", "media", "ux", "performance", "seo_basics", "accessibility", "comparison"]
+    },
+    "owner": {
+      "type": "string",
+      "enum": ["cro", "copy", "design", "dev", "merch", "data", "ops", "content"]
+    },
+    "impact": {
+      "type": "string",
+      "enum": ["high", "medium", "low"]
+    },
+    "effort": {
+      "type": "string",
+      "enum": ["s", "m", "l"]
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["high", "medium", "low"]
+    },
+    "evidence_level": {
+      "type": "string",
+      "enum": ["A", "B", "C"]
+    },
+    "evidence_type": {
+      "type": "string",
+      "enum": ["dom_fact", "selector_fact", "screenshot", "screenshot_crop", "html_fragment", "network_fact", "config_fact", "lab_metric", "console_fact", "screenshot", "measurement", "detection"]
+    },
+    "source_side": {
+      "type": "string",
+      "enum": ["solo", "a", "b", "before", "after", "page_a", "page_b"]
+    },
+    "viewport": {
+      "type": "string",
+      "enum": ["mobile", "desktop", "na"]
+    },
+    "report_language": {
+      "type": "string",
+      "enum": ["fr", "en"]
+    }
+  }
+}

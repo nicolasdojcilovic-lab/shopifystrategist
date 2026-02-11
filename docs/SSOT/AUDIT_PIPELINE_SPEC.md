@@ -1,9 +1,12 @@
 # ShopifyStrategist - AUDIT_PIPELINE_SPEC.md
 ## Owned Concepts (Canonical)
-- TBD
+- Pipeline orchestration (normalize → capture → detectors → scoring → report → render_pdf → storage)
+- Stage contracts and error propagation
 
 ## Not Owned (References)
-- TBD
+- **Persistence**: Prisma with Supabase PostgreSQL
+- **Capture**: Playwright-based capture (Desktop/Mobile)
+- **Storage**: Supabase Storage Buckets
 
 **Spec version:** 1.0  
 **Status:** SSOT (orchestration specification)  
@@ -173,7 +176,7 @@ DUO Before/After (internal)
     "render_pdf_total": 45000
   },
   "urls": {
-    "before": "https://example.com/products/abc?v=2025-12-01",
+    "before": "https://example.com/products/abc?v=2026-12-01",
     "after": "https://example.com/products/abc?v=2026-01-10"
   },
   "options": {

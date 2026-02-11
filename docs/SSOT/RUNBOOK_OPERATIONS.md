@@ -1,10 +1,13 @@
 # ShopifyStrategist — RUNBOOK_OPERATIONS.md (SSOT)
 
 ## Owned Concepts (Canonical)
-- TBD
+- Operational procedures and release gates
+- Fast Contract Check and drift prevention practices
 
 ## Not Owned (References)
-- TBD
+- **Persistence**: Prisma with Supabase PostgreSQL
+- **Capture**: Playwright-based capture (Desktop/Mobile)
+- **Storage**: Supabase Storage Buckets
 
 - **RUNBOOK_OPERATIONS_VERSION:** 1.2
 - **Objective:** operational runbook to minimize support, prevent drift, and guarantee an “agency-grade” deliverable **even in degraded mode**.

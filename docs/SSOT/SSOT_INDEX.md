@@ -5,7 +5,7 @@
 Navigation + governance index for the SSOT set.
 Generated from `SSOT_MANIFEST.json`.
 
-Generated at: 2026-01-28T12:18:00.175Z
+Generated at: 2026-02-04T09:43:04.859Z
 
 ---
 
@@ -40,7 +40,7 @@ Conflict policy:
 
 ---
 
-## Inventory (14 docs)
+## Inventory (15 docs)
 | DocID | File | Title | Category | Normative | Authority | Version |
 |------:|------|-------|----------|:---------:|----------:|:-------:|
 | SSOT-001 | REPORT_ELITE_REQUIREMENTS.md | Report Elite Requirements | core_product_contract | Yes | 1 | 1.9 |
@@ -57,6 +57,7 @@ Conflict policy:
 | SSOT-012 | FIXTURES_AND_ENV_SPEC.md | Fixtures and Environment Spec | qa_validation | Yes | 12 |  |
 | SSOT-013 | RUNBOOK_OPERATIONS.md | Runbook Operations | operations | No | 13 |  |
 | SSOT-014 | SSOT_CONVENTIONS.md | SSOT Conventions | meta | Yes | 14 | 1.0 |
+| SSOT-015 | REQUIREMENTS_CANON_P0.md | Requirements Canon P0 | requirements | Yes |  |  |
 
 ---
 

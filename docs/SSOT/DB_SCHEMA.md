@@ -1,10 +1,13 @@
 # ShopifyStrategist — DB_SCHEMA.md (SSOT)
 
 ## Owned Concepts (Canonical)
-- TBD
+- Table definitions and relations
+- Deterministic key formats and indexes
 
 ## Not Owned (References)
-- TBD
+- **Persistence**: Prisma with Supabase PostgreSQL
+- **Capture**: Playwright-based capture (Desktop/Mobile)
+- **Storage**: Supabase Storage Buckets
 
 **DB_SCHEMA_VERSION:** 1.0  
 **Status:** SSOT (DB schema + deterministic keys + anti-drift invariants)  
@@ -273,7 +276,7 @@ Columns (minimum):
 - `id` (uuid, PK)
 - `received_at` (timestamptz)
 - `request_id` (text, UNIQUE)
-- `endpoint` (text) — `/api/audit-solo|/api/audit-duo`
+- `endpoint` (text) — `/api/audit/solo|/api/audit/duo`
 - `request_hash` (text) — canonical payload hash (debug)
 - `keys` (jsonb) — product/snapshot/run/audit/render if known
 - `status` (text) — `ok|error`

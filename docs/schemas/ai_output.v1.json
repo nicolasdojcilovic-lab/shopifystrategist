@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shopifystrategist.app/schemas/ai_output.v1.json",
+  "title": "AI Output v1",
+  "description": "Required output format for LLM — strict, no hallucination. REGISTRY-aligned: owner (cro|copy|design|dev|merch|data), effort (s|m|l).",
+  "type": "object",
+  "properties": {
+    "tickets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ticket_id": { "type": "string" },
+          "mode": { "type": "string", "enum": ["solo", "duo_ab", "duo_before_after"] },
+          "category": { "type": "string", "enum": ["offer_clarity", "trust", "media", "ux", "performance", "seo_basics", "accessibility", "comparison"] },
+          "impact": { "type": "string", "enum": ["high", "medium", "low"] },
+          "effort": { "type": "string", "enum": ["s", "m", "l"] },
+          "risk": { "type": "string", "enum": ["low", "medium", "high"] },
+          "confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+          "title": { "type": "string" },
+          "why": { "type": "string" },
+          "how_to": { "type": "array", "items": { "type": "string" }, "minItems": 3, "maxItems": 7 },
+          "evidence_refs": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+          "validation": { "type": "array", "items": { "type": "string" } },
+          "quick_win": { "type": "boolean" },
+          "owner": { "type": "string", "enum": ["cro", "copy", "design", "dev", "merch", "data"] },
+          "notes": { "type": "string" }
+        },
+        "required": ["ticket_id", "mode", "category", "impact", "effort", "risk", "confidence", "title", "why", "how_to", "evidence_refs", "validation", "quick_win", "owner", "notes"],
+        "additionalProperties": false
+      }
+    },
+    "reasoning": { "type": "string" },
+    "executive_summary": { "type": "string" },
+    "plan_30_60_90": {
+      "type": "object",
+      "properties": {
+        "j0_30": { "type": "string" },
+        "j30_60": { "type": "string" },
+        "j60_90": { "type": "string" }
+      },
+      "required": ["j0_30", "j30_60", "j60_90"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["tickets", "reasoning", "executive_summary", "plan_30_60_90"],
+  "additionalProperties": false
+}

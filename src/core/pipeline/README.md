@@ -1,17 +1,17 @@
-# Pipeline — AuditService (Orchestrateur)
+# Pipeline — AuditService (Orchestrator)
 
 **Version:** 1.0  
-**Référence SSOT:** `docs/AUDIT_PIPELINE_SPEC.md`
+**SSOT Reference:** `docs/AUDIT_PIPELINE_SPEC.md`
 
-## 📖 Objectif
+## 📖 Objective
 
-L'**AuditService** est l'orchestrateur central du pipeline d'audit ShopifyStrategist. Il coordonne l'exécution end-to-end :
+The **AuditService** is the central orchestrator of the ShopifyStrategist audit pipeline. It coordinates end-to-end execution:
 
-1. **Cache Check** : Vérification des clés déterministes
+1. **Cache Check** : Deterministic key verification
 2. **Capture** : Playwright (Mobile + Desktop)
-3. **Storage** : Upload Supabase (screenshots + HTML)
-4. **Persistence** : Enregistrement Prisma (Product → Snapshot → SnapshotSource → ScoreRun)
-5. **Scoring** : *(TODO: Détecteurs + Scoring Engine)*
+3. **Storage** : Supabase upload (screenshots + HTML)
+4. **Persistence** : Prisma records (Product → Snapshot → SnapshotSource → ScoreRun)
+5. **Scoring** : *(TODO: Detectors + Scoring Engine)*
 6. **Report Generation** : *(TODO: HTML SSOT)*
 
 ---
@@ -24,7 +24,7 @@ L'**AuditService** est l'orchestrateur central du pipeline d'audit ShopifyStrate
 import { AuditService } from '@/core/pipeline/audit.service';
 ```
 
-### Exécution d'un audit SOLO
+### Running a SOLO audit
 
 ```typescript
 const service = new AuditService();
@@ -48,22 +48,22 @@ console.log('Evidences:', result.exports?.evidences.length);
 
 ---
 
-## 🔑 Clés Déterministes (SSOT)
+## 🔑 Deterministic Keys (SSOT)
 
-Le service génère automatiquement toutes les clés du cache multi-couches :
+The service automatically generates all multi-layer cache keys:
 
 - **`product_key`** : Hash(mode + normalized_urls + NORMALIZE_VERSION)
 - **`snapshot_key`** : Hash(product_key + locale + viewports + ENGINE_VERSION)
 - **`run_key`** : Hash(snapshot_key + DETECTORS_VERSION + SCORING_VERSION + mode)
 - **`audit_key`** : Hash(run_key + REPORT_OUTLINE_VERSION + copy_ready + white_label)
 
-**Règle SSOT** : Mêmes entrées + mêmes versions → mêmes clés → cache hit garanti.
+**SSOT Rule** : Same inputs + same versions → same keys → guaranteed cache hit.
 
 ---
 
 ## 💾 Cache Hit Detection
 
-Si un `ScoreRun` avec le même `run_key` existe déjà en base et a un `status = "ok"`, le service **retourne immédiatement** le résultat en cache :
+If a `ScoreRun` with the same `run_key` already exists in the database and has `status = "ok"`, the service **returns immediately** the cached result:
 
 ```typescript
 if (existingRun && existingRun.status === 'ok') {
@@ -77,28 +77,28 @@ if (existingRun && existingRun.status === 'ok') {
 }
 ```
 
-**Durée typique d'un cache hit** : < 100ms (simple query Prisma).
+**Typical cache hit duration** : < 100ms (simple Prisma query).
 
-**Avantage** : Évite les captures coûteuses et garantit la cohérence.
+**Benefit** : Avoids expensive captures and guarantees consistency.
 
 ---
 
 ## 📸 Capture (Playwright)
 
-Le service utilise `PlaywrightService.captureBothViewports()` pour :
+The service uses `PlaywrightService.captureBothViewports()` to:
 
-- Capturer **Mobile** (390×844) et **Desktop** (1440×900) **en parallèle**
-- Appliquer le **resource blocking** (analytics, fonts, media)
-- Utiliser **smart waiting** + **fast-scroll** pour lazy-load
-- Enforcer un **hard timeout** (défaut: 15s par viewport)
+- Capture **Mobile** (390×844) and **Desktop** (1440×900) **in parallel**
+- Apply **resource blocking** (analytics, fonts, media)
+- Use **smart waiting** + **fast-scroll** for lazy-load
+- Enforce a **hard timeout** (default: 15s per viewport)
 
-**Mode Dégradé** : Si la capture échoue, le service enregistre l'erreur dans `errors[]` et retourne `status: 'failed'`.
+**Degraded Mode** : If capture fails, the service records the error in `errors[]` and returns `status: 'failed'`.
 
 ---
 
 ## ☁️  Storage (Supabase)
 
-Les artifacts capturés sont uploadés vers Supabase Storage :
+Captured artifacts are uploaded to Supabase Storage:
 
 **Screenshots** :
 - `screenshots/${audit_key}_mobile.png`
@@ -108,64 +108,64 @@ Les artifacts capturés sont uploadés vers Supabase Storage :
 - `html-reports/${audit_key}_mobile.html`
 - `html-reports/${audit_key}_desktop.html`
 
-**Gestion d'erreurs** : Si un upload échoue, l'erreur est enregistrée dans `errors[]` et le `storage_path` reste `undefined`.
+**Error handling** : If an upload fails, the error is recorded in `errors[]` and `storage_path` remains `undefined`.
 
 ---
 
 ## 🗄️  Persistence (Prisma)
 
-Le service enregistre dans l'ordre :
+The service records in order:
 
-1. **Product** : `upsert` avec `product_key` (mise à jour de `last_seen_at`)
-2. **Snapshot** : `upsert` avec `snapshot_key`
-3. **SnapshotSource** : `upsert` pour `page_a` (SOLO) avec artefacts
-4. **ScoreRun** : `upsert` avec exports (Ticket v2 + Evidence v2)
+1. **Product** : `upsert` with `product_key` (updates `last_seen_at`)
+2. **Snapshot** : `upsert` with `snapshot_key`
+3. **SnapshotSource** : `upsert` for `page_a` (SOLO) with artifacts
+4. **ScoreRun** : `upsert` with exports (Ticket v2 + Evidence v2)
 
-**SSOT Anti-Drift** : Les clés sont `UNIQUE`, garantissant qu'un même résultat ne sera jamais dupliqué.
+**SSOT Anti-Drift** : Keys are `UNIQUE`, guaranteeing that the same result will never be duplicated.
 
 ---
 
-## 🚧 État Actuel (MVP)
+## 🚧 Current State (MVP)
 
-### ✅ Implémenté
+### ✅ Implemented
 
-- Génération clés déterministes
+- Deterministic key generation
 - Cache check (Product → Snapshot → ScoreRun)
-- Capture Playwright (Mobile + Desktop, optimisée)
-- Upload Supabase (screenshots + HTML)
-- Persistence Prisma (4 tables)
-- Gestion d'erreurs robuste (try/catch par stage)
+- Playwright capture (Mobile + Desktop, optimized)
+- Supabase upload (screenshots + HTML)
+- Prisma persistence (4 tables)
+- Robust error handling (try/catch per stage)
 
-### ⏳ TODO (Prochaines étapes)
+### ⏳ TODO (Next steps)
 
-- **Détecteurs** : Implémentation des signaux SSOT (`docs/DETECTORS_SPEC.md`)
-- **Scoring Engine** : Génération des tickets réels (`docs/SCORING_AND_DETECTION.md`)
-- **Evidence v2** : Création des preuves structurées
-- **Report HTML** : Génération du rapport SSOT (`docs/REPORT_OUTLINE.md`)
-- **PDF Export** : Via Playwright (dérivé du HTML)
-- **CSV v1** : Export tabular (`docs/REPORT_OUTLINE.md` section 12)
+- **Detectors** : Implementation of SSOT signals (`docs/DETECTORS_SPEC.md`)
+- **Scoring Engine** : Real ticket generation (`docs/SCORING_AND_DETECTION.md`)
+- **Evidence v2** : Structured evidence creation
+- **HTML Report** : SSOT report generation (`docs/REPORT_OUTLINE.md`)
+- **PDF Export** : Via Playwright (derived from HTML)
+- **CSV v1** : Tabular export (`docs/REPORT_OUTLINE.md` section 12)
 
 ---
 
-## 🎛️  Options d'Audit
+## 🎛️  Audit Options
 
 ```typescript
 interface AuditOptions {
-  locale?: string; // Défaut: 'fr'
-  copyReady?: boolean; // Défaut: false (textes techniques vs business-ready)
+  locale?: string; // Default: 'fr'
+  copyReady?: boolean; // Default: false (technical vs business-ready text)
   whiteLabel?: {
     logo?: string;
     clientName?: string;
     agencyName?: string;
   } | null;
-  captureTimeout?: number; // ms (défaut: 15000)
-  blockResources?: boolean; // Défaut: true (bloquer analytics/fonts/media)
+  captureTimeout?: number; // ms (default: 15000)
+  blockResources?: boolean; // Default: true (block analytics/fonts/media)
 }
 ```
 
 ---
 
-## 📊 Structure du Résultat
+## 📊 Result Structure
 
 ```typescript
 interface AuditResult {
@@ -217,37 +217,37 @@ interface AuditResult {
 
 ---
 
-## 🔒 Mode Dégradé (SSOT)
+## 🔒 Degraded Mode (SSOT)
 
-Conformément à `docs/AUDIT_PIPELINE_SPEC.md`, le service **doit toujours livrer un résultat exploitable**, même en cas d'échec partiel.
+Per `docs/AUDIT_PIPELINE_SPEC.md`, the service **must always deliver an exploitable result**, even on partial failure.
 
-### Statuts
+### Statuses
 
-- **`ok`** : Pipeline complet sans erreur
-- **`degraded`** : Pipeline terminé avec des erreurs non-bloquantes (ex: un screenshot manquant)
-- **`failed`** : Échec fatal (ex: capture totale impossible)
+- **`ok`** : Pipeline complete without error
+- **`degraded`** : Pipeline finished with non-blocking errors (e.g. one missing screenshot)
+- **`failed`** : Fatal failure (e.g. total capture impossible)
 
-### Exemples de Dégradation
+### Degradation Examples
 
-| Scénario | Status | Exports | Artifacts |
+| Scenario | Status | Exports | Artifacts |
 |----------|--------|---------|-----------|
-| Capture réussie, storage OK | `ok` | ✅ Tickets + Evidences | ✅ Tous les refs |
-| Capture OK, storage mobile échoue | `degraded` | ✅ Tickets (evidence partielle) | ❌ Mobile screenshot manquant |
-| Capture timeout total | `failed` | ❌ Aucun | ❌ Aucun |
+| Capture success, storage OK | `ok` | ✅ Tickets + Evidences | ✅ All refs |
+| Capture OK, mobile storage fails | `degraded` | ✅ Tickets (partial evidence) | ❌ Mobile screenshot missing |
+| Total capture timeout | `failed` | ❌ None | ❌ None |
 
 ---
 
 ## 🧪 Testing
 
-### Script de test
+### Test script
 
 ```bash
 npm run test:audit
 ```
 
-*(À créer)*
+*(To be created)*
 
-### Test manuel
+### Manual test
 
 ```typescript
 // scripts/test-audit.ts
@@ -268,25 +268,25 @@ main();
 
 ---
 
-## 📚 Références SSOT
+## 📚 SSOT References
 
-- `docs/AUDIT_PIPELINE_SPEC.md` — Architecture pipeline
-- `docs/DB_SCHEMA.md` — Schéma base de données
-- `docs/SCORING_AND_DETECTION.md` — Signaux + Tickets
-- `docs/DETECTORS_SPEC.md` — Détecteurs
-- `docs/REPORT_OUTLINE.md` — Structure rapport HTML
-- `src/core/engine/keys.ts` — Génération clés déterministes
-- `src/adapters/capture/playwright.service.ts` — Capture optimisée
-- `src/adapters/storage/supabase.service.ts` — Storage cloud
-- `src/contracts/export/ticket.v2.ts` — Schéma Ticket v2
-- `src/contracts/export/evidence.v2.ts` — Schéma Evidence v2
+- `docs/AUDIT_PIPELINE_SPEC.md` — Pipeline architecture
+- `docs/DB_SCHEMA.md` — Database schema
+- `docs/SCORING_AND_DETECTION.md` — Signals + Tickets
+- `docs/DETECTORS_SPEC.md` — Detectors
+- `docs/REPORT_OUTLINE.md` — HTML report structure
+- `src/core/engine/keys.ts` — Deterministic key generation
+- `src/adapters/capture/playwright.service.ts` — Optimized capture
+- `src/adapters/storage/supabase.service.ts` — Cloud storage
+- `src/contracts/export/ticket.v2.ts` — Ticket v2 schema
+- `src/contracts/export/evidence.v2.ts` — Evidence v2 schema
 
 ---
 
-## 🚀 Prochaines Étapes (Roadmap)
+## 🚀 Next Steps (Roadmap)
 
-1. **Créer le script de test** : `scripts/test-audit.ts`
-2. **Implémenter les détecteurs** : `src/core/detectors/*`
-3. **Brancher le scoring engine** : `src/core/scoring/*`
-4. **Générer le rapport HTML** : `src/core/pipeline/report-generator.ts`
-5. **Intégrer l'API publique** : `app/api/audit-solo/route.ts`
+1. **Create test script** : `scripts/test-audit.ts`
+2. **Implement detectors** : `src/core/detectors/*`
+3. **Wire scoring engine** : `src/core/scoring/*`
+4. **Generate HTML report** : `src/core/pipeline/report-generator.ts`
+5. **Integrate public API** : `app/api/audit-solo/route.ts`

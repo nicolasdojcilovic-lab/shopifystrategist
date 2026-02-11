@@ -1,9 +1,13 @@
 # ShopifyStrategist — API_DOC.md (SSOT)
 ## Owned Concepts (Canonical)
-- TBD
+- API contracts for audit endpoints (SOLO, DUO)
+- Request/response envelope formats
+- Version headers and deterministic IDs
 
 ## Not Owned (References)
-- TBD
+- **Persistence**: Prisma with Supabase PostgreSQL
+- **Capture**: Playwright-based capture (Desktop/Mobile)
+- **Storage**: Supabase Storage Buckets
 
 **API_DOC_VERSION :** 1.2  
 **Status :** SSOT (public API contracts)  
@@ -67,8 +71,11 @@ These versions MUST appear in the API response (`versions`) and on the HTML cove
 ---
 
 ## 3) Endpoints (MVP)
-- `POST /api/audit-solo`
-- `POST /api/audit-duo`
+
+All audit endpoints live under the `/api/audit/` namespace:
+- `POST /api/audit/solo` — start a SOLO audit
+- `POST /api/audit/duo` — start a DUO audit (AB or Before/After)
+- `GET /api/audit/[auditKey]` — poll status of an existing audit
 
 Principle contract:
 - HTTP 200 if an **SSOT HTML** was produced (`status="ok"`).
@@ -201,7 +208,7 @@ Only if no SSOT HTML can be produced.
 
 ---
 
-## 6) POST `/api/audit-solo`
+## 6) POST `/api/audit/solo`
 
 ### 6.1 Request (URL)
 ```json
@@ -290,22 +297,22 @@ Minimal example (1 ticket + 1 evidence).
       {
         "ticket_id": "T_solo_offer_clarity_SIG_OFFER_02_pdp_01",
         "mode": "solo",
-        "title": "Afficher le prix dans le bloc d’achat",
+        "title": "Display price in the buybox",
         "impact": "high",
         "effort": "small",
         "risk": "low",
         "confidence": "high",
         "category": "offer_clarity",
-        "why": "Le prix n’est pas détectable dans la zone d’achat, ce qui augmente la friction au moment de décider.",
+        "why": "Price is not detectable in the purchase zone, which increases friction at decision time.",
         "evidence_refs": ["E_page_a_mobile_detection_buybox_detect_01"],
         "how_to": [
-          "Localiser le composant de prix dans le template PDP.",
-          "Afficher le prix dans la buybox (proche du CTA) sur mobile et desktop.",
-          "Vérifier l’affichage pour variantes et promos (compare_at)."
+          "Locate the price component in the PDP template.",
+          "Display the price in the buybox (near the CTA) on mobile and desktop.",
+          "Verify display for variants and promos (compare_at)."
         ],
         "validation": [
-          "Sur mobile, le prix est visible dans la buybox sans scroll.",
-          "Le prix est cohérent avec la variante sélectionnée."
+          "On mobile, price is visible in the buybox without scroll.",
+          "Price is consistent with the selected variant."
         ],
         "quick_win": true,
         "owner_hint": "design",
@@ -328,7 +335,7 @@ Minimal example (1 ticket + 1 evidence).
           "data_sources_used": ["dom", "screenshots"],
           "facts_summary": {
             "buybox_detected": true,
-            "primary_cta_text": "Ajouter au panier"
+            "primary_cta_text": "Add to cart"
           }
         }
       }
@@ -403,7 +410,7 @@ Rule: if `artifacts.html_ref` exists ⇒ `status="ok"` even if evidence/artifact
 
 ---
 
-## 7) POST `/api/audit-duo`
+## 7) POST `/api/audit/duo`
 
 ### 7.1 Request (AB)
 ```json
@@ -433,7 +440,7 @@ Rule: if `artifacts.html_ref` exists ⇒ `status="ok"` even if evidence/artifact
   "compare_type": "before_after",
   "locale": "fr",
   "urls": {
-    "before": "https://example.com/products/abc?v=2025-12-01",
+    "before": "https://example.com/products/abc?v=2026-12-01",
     "after": "https://example.com/products/abc?v=2026-01-10"
   },
   "options": {
@@ -680,7 +687,7 @@ Per `AUDIT_PIPELINE_SPEC` §11:
 ---
 
 ## 11) DoD (Definition of Done) — API (release gate)
-- [ ] Endpoints: `POST /api/audit-solo` + `POST /api/audit-duo` (AB + Before/After).
+- [ ] Endpoints: `POST /api/audit/solo` + `POST /api/audit/duo` (AB + Before/After).
 - [ ] Strict payload validation: 400 on invalid payload / invalid enum.
 - [ ] `versions` exposed and consistent: 3.1 / 2 / 2 / 1 / 1.3 + runtime versions.
 - [ ] `report_meta.evidence_completeness` matches Set A/B gating; DUO = worst of sources.
@@ -693,3 +700,5 @@ Per `AUDIT_PIPELINE_SPEC` §11:
 - [ ] `missing_evidence_reason` ∈ 6 SSOT enums (or `null`), never anything else.
 - [ ] Degraded mode: if SSOT HTML produced ⇒ `status="ok"` + `errors[]` (explicit limitations).
 - [ ] Smoke: SOLO + DUO AB + DUO BA; cookie/popup/timeout/navigation_intercept cases; rerun via `snapshot_key` ⇒ same IDs/order.
+
+*Last Updated: 2026-02-08*

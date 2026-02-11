@@ -1,19 +1,22 @@
 # ShopifyStrategist — FIXTURES_AND_ENV_SPEC.md (SSOT)
 
 ## Owned Concepts (Canonical)
-- TBD
+- Fixtures pack structure and naming conventions
+- Environment variables and smoke execution interface
 
 ## Not Owned (References)
-- TBD
+- **Persistence**: Prisma with Supabase PostgreSQL
+- **Capture**: Playwright-based capture (Desktop/Mobile)
+- **Storage**: Supabase Storage Buckets
 
 - **FIXTURES_AND_ENV_SPEC_VERSION:** 1.2
-- **Objectif:** définir un pack de fixtures stables + une interface d’environnement pour exécuter les smoke tests de manière déterministe, anti-flaky, et anti-drift.
-- **Portée:** fixtures + conventions d’exécution + artefacts attendus. Pas de code.
-- **Non-objectif:** redéfinir des schémas/enums/thresholds déjà SSOT.
+- **Objective:** define a stable fixtures pack + an environment interface to run smoke tests deterministically, anti-flaky, and anti-drift.
+- **Scope:** fixtures + execution conventions + expected artifacts. No code.
+- **Non-goal:** redefine schemas/enums/thresholds already SSOT.
 
 ---
 
-## 0) Références SSOT
+## 0) SSOT references
 
 - `docs/API_DOC.md`
 - `docs/SMOKE_AND_QA_SPEC.md`
@@ -25,97 +28,97 @@
 - `docs/AUDIT_PIPELINE_SPEC.md`
 - `docs/DETECTORS_SPEC.md`
 
-### 0.1 Hiérarchie
-- Payloads API : conformes à `API_DOC.md`.
-- Gates/Assertions : conformes à `SMOKE_AND_QA_SPEC.md` + `RUNBOOK_OPERATIONS.md`.
-- Autorité de ce doc : structure pack, format fixtures, anti-flaky, env, artefacts.
+### 0.1 Hierarchy
+- API payloads: compliant with `API_DOC.md`.
+- Gates/Assertions: compliant with `SMOKE_AND_QA_SPEC.md` + `RUNBOOK_OPERATIONS.md`.
+- Authority of this doc: pack structure, fixtures format, anti-flaky, env, artifacts.
 
 ---
 
-## 1) Structure du pack fixtures
+## 1) Fixtures pack structure
 
-### 1.1 Emplacement
+### 1.1 Location
 - `fixtures/smoke/`
   - `README.md`
   - `fixtures.index.json`
   - `<fixture_id>.json`
 
-### 1.2 Index canonique (`fixtures.index.json`)
-Champs requis :
+### 1.2 Canonical index (`fixtures.index.json`)
+Required fields:
 - `fixture_id`
 - `category` ∈ `solo|duo|degraded`
 - `scenario`
 - `enabled` (bool)
 - `tier` ∈ `gold|silver|bronze`
-- `profiles` : liste ∈ `pr_gate|nightly`
-- `tags` : liste (convention : inclure `solo`, `duo_ab`, `duo_before_after`, `degraded`)
+- `profiles`: list ∈ `pr_gate|nightly`
+- `tags`: list (convention: include `solo`, `duo_ab`, `duo_before_after`, `degraded`)
 
-Règles :
-- ordre stable dans l’index = ordre d’exécution par défaut.
+Rules:
+- stable order in the index = default execution order.
 - `bronze` ∉ `pr_gate`.
-- Les 4 baselines `pr_gate` doivent être prioritairement **contrôlées/owned** (voir §4.4).
+- The 4 `pr_gate` baselines MUST be primarily **controlled/owned** (see §4.4).
 
 ---
 
-## 2) Format d’une fixture (contrat interne)
+## 2) Fixture format (internal contract)
 
-### 2.1 Métadonnées
+### 2.1 Metadata
 - `fixture_id`
 - `name`
 - `category`
 - `tier`
 - `profiles`
-- `notes` (optionnel)
-- `serial_only` (bool, default false) — force exécution séquentielle de cette fixture
+- `notes` (optional)
+- `serial_only` (bool, default false) — forces sequential execution of this fixture
 
-### 2.2 Requête API
-- `endpoint` ∈ `/api/audit-solo|/api/audit-duo`
-- `request` : payload conforme `API_DOC.md`
-- `render` : `{ "pdf": bool, "csv": bool }`
+### 2.2 API request
+- `endpoint` ∈ `/api/audit/solo|/api/audit/duo`
+- `request`: payload compliant `API_DOC.md`
+- `render`: `{ "pdf": bool, "csv": bool }`
 
-### 2.3 Assertions internes (schema fermé)
-`expect` :
-- `status` : `"ok"|"error"`
-- `mode` : `"solo"|"duo_ab"|"duo_before_after"`
-- `alignment_level` : `"null_in_solo"|"enum_in_duo"`
-- `evidence_completeness` : `"complete"|"partial"|"insufficient"|"any"`
-- `missing_evidence` :
+### 2.3 Internal assertions (closed schema)
+`expect`:
+- `status`: `"ok"|"error"`
+- `mode`: `"solo"|"duo_ab"|"duo_before_after"`
+- `alignment_level`: `"null_in_solo"|"enum_in_duo"`
+- `evidence_completeness`: `"complete"|"partial"|"insufficient"|"any"`
+- `missing_evidence`:
   - `must_exist_if_not_complete` (bool)
   - `must_detail_by_source_in_duo` (bool)
-- `errors` :
-  - `allowed_stages` : `"any"` ou liste (stages macro SSOT)
-  - `required_stage` : `"none"` ou un stage macro
-  - `allowed_missing_evidence_reasons` : `"any"` ou liste (6 reasons)
-  - `required_missing_evidence_reason` : `"none"` ou une reason (6 reasons)
-  - `source_policy` :
+- `errors`:
+  - `allowed_stages`: `"any"` or list (SSOT macro stages)
+  - `required_stage`: `"none"` or one macro stage
+  - `allowed_missing_evidence_reasons`: `"any"` or list (6 reasons)
+  - `required_missing_evidence_reason`: `"none"` or one reason (6 reasons)
+  - `source_policy`:
     - `solo_source_must_be_na` (bool)
-    - `duo_sources_allowed` : `"by_mode"` ou liste
-- `determinism` :
-  - `runs` : entier (default 2)
-  - `must_match` : liste ∈ `{exports, keys, report_meta, html_hash, ticket_order, evidence_order}`
-  - `must_not_use` : doit inclure `artifacts_refs`
-- `html_fetch_policy` :
+    - `duo_sources_allowed`: `"by_mode"` or list
+- `determinism`:
+  - `runs`: integer (default 2)
+  - `must_match`: list ∈ `{exports, keys, report_meta, html_hash, ticket_order, evidence_order}`
+  - `must_not_use`: MUST include `artifacts_refs`
+- `html_fetch_policy`:
   - `required` (bool)
-- `skip_conditions` :
+- `skip_conditions`:
   - `skip_pdf_assertions_if_render_pdf_disabled` (bool, default true)
   - `skip_csv_assertions_if_render_csv_disabled` (bool, default true)
 
-Règles :
-- Tout champ hors schema est interdit.
-- En **PR gate**, `html_fetch_policy.required` doit être `true` (pas de skip HTML).
-- `skip_conditions` n’autorise que des skips liés à `render.pdf=false` / `render.csv=false` (pas de contournement contractuel).
+Rules:
+- Any field outside the schema is forbidden.
+- In **PR gate**, `html_fetch_policy.required` MUST be `true` (no HTML skip).
+- `skip_conditions` only allows skips related to `render.pdf=false` / `render.csv=false` (no contractual bypass).
 
 ---
 
-## 3) Catalogue minimal obligatoire
+## 3) Mandatory minimal catalog
 
 ### 3.1 Baselines (must-pass, `pr_gate`)
 1. `solo_ok_instant`
-2. `solo_ok_copyready` (mêmes URLs que `solo_ok_instant`)
+2. `solo_ok_copyready` (same URLs as `solo_ok_instant`)
 3. `duo_ab_ok`
 4. `duo_before_after_ok`
 
-### 3.2 Dégradés (6 reasons, `nightly`)
+### 3.2 Degraded (6 reasons, `nightly`)
 5. `degraded_cookie` → `blocked_by_cookie_consent`
 6. `degraded_popup` → `blocked_by_popup`
 7. `degraded_timeout` → `timeout`
@@ -123,87 +126,87 @@ Règles :
 9. `degraded_infinite_scroll_or_lazyload` → `infinite_scroll_or_lazyload`
 10. `degraded_unknown_render_issue` → `unknown_render_issue`
 
-Règles dégradés :
+Degraded rules:
 - `expect.errors.required_stage = "capture"`
-- `expect.errors.required_missing_evidence_reason` = reason ciblée (jamais `"any"`)
-- `expect.evidence_completeness` doit être **`partial` ou `insufficient`** (interdit : `complete`)
+- `expect.errors.required_missing_evidence_reason` = targeted reason (never `"any"`)
+- `expect.evidence_completeness` MUST be **`partial` or `insufficient`** (forbidden: `complete`)
 - `expect.missing_evidence.must_exist_if_not_complete = true`
 
 ---
 
-## 4) Règles anti-flaky (URLs)
+## 4) Anti-flaky rules (URLs)
 
-### 4.1 Critères gold
-- publique, stable, sans login/paywall/geo gating
-- DOM relativement stable
-- éviter anti-bot instable
+### 4.1 Gold criteria
+- public, stable, no login/paywall/geo gating
+- relatively stable DOM
+- avoid unstable anti-bot
 
 ### 4.2 Exclusions
 - auth/checkout
-- promos flash / contenu “today-only”
-- sites qui bloquent l’automation
+- flash promos / “today-only” content
+- sites that block automation
 
-### 4.3 Qualification tiering
-- PR gate validation : 2 runs consécutifs sans P0.
-- Promotion `gold` : 5 runs sur ≥ 2 jours (nightly), sans violation Fast Contract Check.
+### 4.3 Tiering qualification
+- PR gate validation: 2 consecutive runs without P0.
+- Promotion to `gold`: 5 runs over ≥ 2 days (nightly), without violating Fast Contract Check.
 
-### 4.4 Règle “owned baseline” (fortement recommandée)
-- Les 4 baselines `pr_gate` doivent idéalement cibler un **shop de test contrôlé** (owned) pour minimiser le risque externe.
-- Les pages externes restent recommandées pour `nightly` (détection dérives externes).
+### 4.4 “Owned baseline” rule (strongly recommended)
+- The 4 `pr_gate` baselines SHOULD ideally target a **controlled test shop** (owned) to minimize external risk.
+- External pages remain recommended for `nightly` (detect external drifts).
 
 ---
 
-## 5) Gouvernance des changements
+## 5) Change governance
 
-### 5.1 Changer une URL
-- Si scénario identique : garder `fixture_id`, documenter dans `notes`, requalifier tier.
-- Si scénario change : nouveau `fixture_id`, ancien `enabled=false`.
+### 5.1 Change a URL
+- If the scenario is identical: keep `fixture_id`, document in `notes`, re-qualify tier.
+- If the scenario changes: new `fixture_id`, old `enabled=false`.
 
-### 5.2 Trace des changements (anti-support)
-Le runner doit produire un hash de la fixture :
+### 5.2 Change trace (anti-support)
+The runner MUST produce a fixture hash:
 - `fixture_contract_hash = SHA256(canonical_json(fixture_file))`
-et l’écrire dans les artefacts (§8).
+and write it into the artifacts (§8).
 
 ---
 
-## 6) Profils d’exécution
+## 6) Execution profiles
 
-- Local : rapide
-- CI PR gate : strict, `profiles=pr_gate`, fail fast
-- Nightly : `profiles=nightly` (inclut bronze)
+- Local: fast
+- CI PR gate: strict, `profiles=pr_gate`, fail fast
+- Nightly: `profiles=nightly` (includes bronze)
 
-Règles :
-- Les fixtures marquées `serial_only=true` s’exécutent toujours séquentiellement, même si `SMOKE_CONCURRENCY>1`.
+Rules:
+- Fixtures marked `serial_only=true` always run sequentially, even if `SMOKE_CONCURRENCY>1`.
 
 ---
 
-## 7) Variables d’environnement
+## 7) Environment variables
 
-### 7.1 Réseau / API
+### 7.1 Network / API
 - `SMOKE_BASE_URL`
-- `SMOKE_TIMEOUT_MS` (reco : 120000)
-- `SMOKE_CONCURRENCY` (reco PR gate : 1)
+- `SMOKE_TIMEOUT_MS` (recommended: 120000)
+- `SMOKE_CONCURRENCY` (recommended PR gate: 1)
 
-### 7.2 Exécution
+### 7.2 Execution
 - `SMOKE_OUT_DIR` (default `tmp/smoke`)
 - `SMOKE_RUNS_PER_FIXTURE` (default 2)
 - `SMOKE_MAX_RERUN_TRANSIENT` (default 1)
-- `SMOKE_FAIL_FAST` (default true en PR gate)
+- `SMOKE_FAIL_FAST` (default true in PR gate)
 - `SMOKE_PROFILE` ∈ `pr_gate|nightly|all` (default `pr_gate`)
 
 ### 7.3 Fetch HTML (hard rule)
 - `SMOKE_FETCH_HTML` (bool, default true)
-Règles :
-- En PR gate : `SMOKE_FETCH_HTML=true` est obligatoire.
-- En nightly : `SMOKE_FETCH_HTML` peut être true/false, mais si false le runner doit marquer explicitement “no html fetch” et ne pas valider les gates wrappers/anchors.
+Rules:
+- In PR gate: `SMOKE_FETCH_HTML=true` is mandatory.
+- In nightly: `SMOKE_FETCH_HTML` may be true/false, but if false the runner MUST explicitly mark “no html fetch” and MUST NOT validate the wrappers/anchors gates.
 
-### 7.4 Auth (optionnel)
+### 7.4 Auth (optional)
 - `SMOKE_AUTH_HEADER_NAME`
 - `SMOKE_AUTH_HEADER_VALUE`
 
 ---
 
-## 8) Artefacts attendus
+## 8) Expected artifacts
 
 ### 8.1 Layout
 - `tmp/smoke/<fixture_id>/run_<n>/request.json`
@@ -211,31 +214,44 @@ Règles :
 - `tmp/smoke/<fixture_id>/run_<n>/assertions.json`
 - `tmp/smoke/<fixture_id>/run_<n>/fingerprint.json`
 - `tmp/smoke/<fixture_id>/run_<n>/fixture_contract_hash.txt`
-- `tmp/smoke/<fixture_id>/run_<n>/errors.txt` (si FAIL)
-- `tmp/smoke/<fixture_id>/run_<n>/report.html` (si fetch)
-- `tmp/smoke/<fixture_id>/run_<n>/report.pdf` (si `pdf_ref` non-null)
-- `tmp/smoke/<fixture_id>/run_<n>/tickets.csv` (si `csv_ref` non-null)
+- `tmp/smoke/<fixture_id>/run_<n>/errors.txt` (if FAIL)
+- `tmp/smoke/<fixture_id>/run_<n>/report.html` (if fetch)
+- `tmp/smoke/<fixture_id>/run_<n>/report.pdf` (if `pdf_ref` non-null)
+- `tmp/smoke/<fixture_id>/run_<n>/tickets.csv` (if `csv_ref` non-null)
 
-### 8.2 Fingerprint (comparaison rapide)
-`fingerprint.json` inclut au minimum :
+### 8.2 Fingerprint (quick comparison)
+`fingerprint.json` includes at minimum:
 - `fixture_id`, `fixture_contract_hash`
 - `keys.*`
 - `versions`
 - `report_meta`
-- hash HTML (si fetch) + tailles artefacts
-- compteurs : `tickets_count`, `evidences_count`, `errors_count`
+- HTML hash (if fetch) + artifact sizes
+- counters: `tickets_count`, `evidences_count`, `errors_count`
 
 ---
 
 ## 9) DoD
 
-- [ ] pack présent (README + index + fixtures)
-- [ ] index stable avec `tier` + `profiles` + tags conventionnels
-- [ ] 10 fixtures minimales (4 baselines pr_gate + 6 dégradés nightly)
-- [ ] `expect` respecte le schema fermé
-- [ ] dégradés verrouillés : stage=capture + reason ciblée + completeness not complete
-- [ ] qualification gold définie (5 runs / ≥2 jours)
-- [ ] `SMOKE_FETCH_HTML` obligatoire en PR gate
-- [ ] `serial_only` supporté pour fixtures fragiles
-- [ ] artefacts incluent fingerprint + fixture_contract_hash
-- [ ] alignement explicite avec SMOKE_AND_QA_SPEC + RUNBOOK
+- [ ] pack present (README + index + fixtures)
+- [ ] stable index with `tier` + `profiles` + conventional tags
+- [ ] 10 minimal fixtures (4 baselines pr_gate + 6 degraded nightly)
+- [ ] `expect` respects the closed schema
+- [ ] degraded fixtures locked: stage=capture + targeted reason + completeness not complete
+- [ ] gold qualification defined (5 runs / ≥2 days)
+- [ ] `SMOKE_FETCH_HTML` mandatory in PR gate
+- [ ] `serial_only` supported for fragile fixtures
+- [ ] artifacts include fingerprint + fixture_contract_hash
+- [ ] explicit alignment with SMOKE_AND_QA_SPEC + RUNBOOK
+
+## No-drift audit
+
+- Verified no changes to identifiers, enums, keys, paths, filenames, or inline code:
+  - Paths and filenames: `fixtures/smoke/`, `fixtures.index.json`, `<fixture_id>.json`, `tmp/smoke/<fixture_id>/run_<n>/...`
+  - Enums/literals: `solo|duo|degraded`, `gold|silver|bronze`, `pr_gate|nightly|all`, `"ok"|"error"`, `"solo"|"duo_ab"|"duo_before_after"`, `"complete"|"partial"|"insufficient"|"any"`, the 6 `missing_evidence_reason` values, `SMOKE_*` env vars, `/api/audit/solo|/api/audit/duo`
+  - Hash expression preserved exactly: `fixture_contract_hash = SHA256(canonical_json(fixture_file))`
+- Verified Markdown structure preserved exactly (same headings, numbering, list order).
+- `[CHECK]`: none.
+
+## Minimal patch proposal
+
+- **SSOT path drift risk:** the references in §0 use `docs/<NAME>.md` while the locked SSOT directory uses `docs/SSOT/<NAME>.md`. Minimal patch: update only those inline-code reference paths to `docs/SSOT/<NAME>.md` (no other changes).

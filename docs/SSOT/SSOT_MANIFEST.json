@@ -365,6 +365,25 @@
         "DUO_BEFORE_AFTER"
       ],
       "depends_on": []
+    },
+    {
+      "doc_id": "SSOT-015",
+      "file": "REQUIREMENTS_CANON_P0.md",
+      "title": "Requirements Canon P0",
+      "category": "requirements",
+      "normative": true,
+      "authority_rank": null,
+      "version": null,
+      "scope_modes": [
+        "SOLO_INSTANT",
+        "SOLO_CLIENT_READY",
+        "DUO_AB",
+        "DUO_BEFORE_AFTER"
+      ],
+      "depends_on": [
+        "REPORT_ELITE_REQUIREMENTS.md",
+        "REGISTRY.md"
+      ]
     }
   ],
   "quality_gates": {

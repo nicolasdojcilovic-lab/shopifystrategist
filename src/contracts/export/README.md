@@ -1,18 +1,18 @@
-# contracts/export/ — Schémas d'Export Stables (API Publique)
+# contracts/export/ — Stable Export Schemas (Public API)
 
-Ce dossier contient les schémas Zod pour les formats d'export **stables** (anti-drift).
+This directory contains Zod schemas for **stable** export formats (anti-drift).
 
-## Fichiers
+## Files
 
 ### `ticket.v2.ts`
-Schéma Ticket (TICKET_SCHEMA_VERSION = 2).
+Ticket schema (TICKET_SCHEMA_VERSION = 2).
 
-**Champs (format stable)** :
+**Fields (stable format)**:
 - `ticket_id` : `T_<mode>_<category>_<signal_id>_<scope>_<idx>`
 - `mode` : `solo | duo_ab | duo_before_after`
 - `title`
 - `impact` : `high | medium | low`
-- `effort` : `small | medium | large`
+- `effort` : `s | m | l` (REGISTRY SSOT)
 - `risk` : `low | medium | high`
 - `confidence` : `high | medium | low`
 - `category` : `offer_clarity | trust | media | ux | performance | seo_basics | accessibility | comparison`
@@ -21,15 +21,15 @@ Schéma Ticket (TICKET_SCHEMA_VERSION = 2).
 - `how_to` : `string[]` (3–7 steps)
 - `validation` : `string[]`
 - `quick_win` : `boolean`
-- `owner_hint` : `design | dev | content | ops`
-- `notes` : `string` (optionnel)
+- `owner` : `cro | copy | design | dev | merch | data` (REGISTRY SSOT)
+- `notes` : `string` (optional)
 
-**Référence SSOT** : `docs/REPORT_OUTLINE.md` section 8.
+**SSOT Reference**: `docs/REPORT_OUTLINE.md` section 8.
 
 ### `evidence.v2.ts`
-Schéma Evidence (EVIDENCE_SCHEMA_VERSION = 2).
+Evidence schema (EVIDENCE_SCHEMA_VERSION = 2).
 
-**Champs (format stable)** :
+**Fields (stable format)**:
 - `evidence_id` : `E_<source>_<viewport>_<type>_<label>_<idx>`
 - `level` : `A | B | C`
 - `type` : `screenshot | measurement | detection`
@@ -37,42 +37,44 @@ Schéma Evidence (EVIDENCE_SCHEMA_VERSION = 2).
 - `source` : `page_a | page_b | before | after`
 - `viewport` : `mobile | desktop | na`
 - `timestamp` : ISO 8601
-- `ref` : **ancre HTML** `#evidence-<evidence_id>` (règle dure)
-- `details` : objet libre (metric, value, method, threshold)
+- `ref` : **HTML anchor** `#evidence-<evidence_id>` (hard rule)
+- `details` : flexible object (metric, value, method, threshold)
 
-**Référence SSOT** : `docs/REPORT_OUTLINE.md` section 9.
+**SSOT Reference**: `docs/REPORT_OUTLINE.md` section 9.
 
-**RÈGLE DURE** : `Evidence.ref` DOIT pointer vers ancre `#evidence-<evidence_id>`.  
-Tout storage/path/JSON pointer va dans `details`.
+**HARD RULE**: `Evidence.ref` MUST point to anchor `#evidence-<evidence_id>`.
+Any storage path/URL/JSON pointer goes in `details`.
 
 ### `csv.v1.ts`
-Schéma CSV Export (CSV_EXPORT_VERSION = 1).
+CSV Export schema (CSV_EXPORT_VERSION = 1).
 
-**Colonnes (format stable)** :
+**Columns (stable format)**:
 - `ticket_id`, `mode`, `title`, `impact`, `effort`, `risk`, `confidence`, `category`
-- `why`, `evidence_refs` (séparateur `|`)
-- `how_to` (séparateur `|`), `validation` (séparateur `|`)
-- `quick_win`, `owner_hint`, `url_context`
+- `why`, `evidence_refs` (separator `|`)
+- `how_to` (separator `|`), `validation` (separator `|`)
+- `quick_win`, `owner`, `url_context`
 
-**Référence SSOT** : `docs/REPORT_OUTLINE.md` section 12.
+**SSOT Reference**: `docs/REPORT_OUTLINE.md` section 12.
 
 ---
 
-## Règles Anti-Drift (Non Négociables)
+## Anti-Drift Rules (Non-Negotiable)
 
-1. **Aucun nouveau champ export** sans :
-   - Bump de version correspondante (major si breaking)
-   - Mise à jour des docs SSOT
-   - Validation contract-first
+1. **No new export field** without:
+   - Corresponding version bump (major if breaking)
+   - SSOT docs update
+   - Contract-first validation
 
-2. **HTML report = SSOT** : PDF/CSV sont dérivés du HTML.
+2. **HTML report = SSOT**: PDF/CSV are derived from HTML.
 
-3. **Evidence-based** : Chaque ticket DOIT avoir `evidence_refs.length >= 1`.
+3. **Evidence-based**: Each ticket MUST have `evidence_refs.length >= 1`.
 
-4. **Wrappers HTML obligatoires** :
-   - Ticket : `id="ticket-<ticket_id>"`
-   - Evidence : `id="evidence-<evidence_id>"`
+4. **Required HTML wrappers**:
+   - Ticket: `id="ticket-<ticket_id>"`
+   - Evidence: `id="evidence-<evidence_id>"`
 
-5. **Déterminisme** : Mêmes entrées + mêmes versions → mêmes IDs + même tri.
+5. **Determinism**: Same inputs + same versions → same IDs + same sort order.
 
-Toute modification de ce dossier DOIT être précédée d'une validation SSOT.
+Any modification to this directory MUST be preceded by SSOT validation.
+
+*Last Updated: 2026-02-08*

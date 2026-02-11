@@ -1,0 +1,250 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shopifystrategist.app/schemas/tickets_and_score.v1.json",
+  "title": "Tickets and Score v1",
+  "description": "Deterministic roadmap and scoring",
+  "$defs": {
+    "ticket": {
+      "type": "object",
+      "properties": {
+        "ticket_id": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "solo",
+            "duo_ab",
+            "duo_before_after"
+          ]
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "offer_clarity",
+            "trust",
+            "media",
+            "ux",
+            "performance",
+            "seo_basics",
+            "accessibility",
+            "comparison"
+          ]
+        },
+        "impact": {
+          "type": "string",
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "effort": {
+          "type": "string",
+          "enum": [
+            "small",
+            "medium",
+            "large"
+          ]
+        },
+        "risk": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "confidence": {
+          "type": "string",
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "why": {
+          "type": "string"
+        },
+        "how_to": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 3,
+          "maxItems": 7
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "validation": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "quick_win": {
+          "type": "boolean"
+        },
+        "owner_hint": {
+          "type": "string",
+          "enum": [
+            "design",
+            "dev",
+            "content",
+            "ops"
+          ]
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ticket_id",
+        "mode",
+        "category",
+        "impact",
+        "effort",
+        "risk",
+        "confidence",
+        "title",
+        "why",
+        "how_to",
+        "evidence_refs",
+        "validation",
+        "quick_win",
+        "owner_hint",
+        "notes"
+      ],
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "evidence_id": {
+          "type": "string"
+        },
+        "level": {
+          "type": "string",
+          "enum": [
+            "A",
+            "B",
+            "C"
+          ]
+        },
+        "type": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "viewport": {
+          "type": "string",
+          "enum": [
+            "mobile",
+            "desktop",
+            "na"
+          ]
+        },
+        "timestamp": {
+          "type": "string"
+        },
+        "ref": {
+          "type": "string"
+        },
+        "details": {
+          "type": "object"
+        }
+      }
+    },
+    "plan_30_60_90": {
+      "type": "object",
+      "properties": {
+        "j0_30": {
+          "type": "string"
+        },
+        "j30_60": {
+          "type": "string"
+        },
+        "j60_90": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "j0_30",
+        "j30_60",
+        "j60_90"
+      ],
+      "additionalProperties": false
+    },
+    "score_breakdown_item": {
+      "type": "object",
+      "properties": {
+        "pillar": {
+          "type": "string",
+          "enum": [
+            "clarte",
+            "friction",
+            "confiance",
+            "social",
+            "mobile",
+            "perf",
+            "seo"
+          ]
+        },
+        "delta": {
+          "type": "number"
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "pillar",
+        "delta",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "strategist_score_output": {
+      "type": "object",
+      "properties": {
+        "strategist_score": {
+          "type": "integer"
+        },
+        "pillar_scores": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "breakdown": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/score_breakdown_item"
+          }
+        },
+        "reasoning": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "strategist_score",
+        "pillar_scores",
+        "breakdown",
+        "reasoning"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

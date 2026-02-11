@@ -1,10 +1,13 @@
 # ShopifyStrategist — EVIDENCE_PACK_SPEC.md (SSOT-aligned)
 
 ## Owned Concepts (Canonical)
-- TBD
+- Evidence v2 object format and HTML anchoring
+- Missing evidence reasons and rendering rules
 
 ## Not Owned (References)
-- TBD
+- **Persistence**: Prisma with Supabase PostgreSQL
+- **Capture**: Playwright-based capture (Desktop/Mobile)
+- **Storage**: Supabase Storage Buckets
 
 **EVIDENCE_PACK_SPEC_VERSION:** 1.2  
 **Status:** SSOT (EvidenceBuilder + HTML rendering "Evidence pack")  

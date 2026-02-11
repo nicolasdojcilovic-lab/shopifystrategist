@@ -1,10 +1,10 @@
 'use client';
 
 /**
- * Page d'accueil — Premium Dark
+ * Home page — Premium Dark
  *
- * Design minimaliste Stripe/Linear : fond sombre, typographie soignée.
- * Input URL Shopify + bouton "Lancer l'Audit", état de chargement, redirect /audit/[auditKey].
+ * Minimalist Stripe/Linear design: dark background, refined typography.
+ * Shopify URL input + launch audit button, loading state, redirect to /audit/[auditKey].
  */
 
 import { useState, FormEvent } from 'react';
@@ -22,7 +22,7 @@ export default function HomePage() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/audit', {
+      const res = await fetch('/api/audit/solo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: url.trim() }),
@@ -31,19 +31,20 @@ export default function HomePage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data?.error || `Erreur ${res.status}`);
+        setError(data?.error?.message || data?.error || `Error ${res.status}`);
         setLoading(false);
         return;
       }
 
-      if (data.auditKey) {
-        window.location.href = `/audit/${encodeURIComponent(data.auditKey)}`;
+      const auditKey = data?.keys?.audit_key ?? data?.auditKey;
+      if (auditKey) {
+        window.location.href = `/audit/${encodeURIComponent(auditKey)}`;
         return;
       }
 
-      setError('Réponse invalide (auditKey manquant)');
+      setError('Invalid response (auditKey missing)');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur réseau');
+      setError(err instanceof Error ? err.message : 'Network error');
     } finally {
       setLoading(false);
     }
@@ -52,7 +53,7 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#0a0a0b] flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-xl">
-        {/* Brand */}
+        {/* Brand block */}
         <div className="text-center mb-10">
           <h1 className="text-2xl font-semibold text-white tracking-tight">
             ShopifyStrategist
@@ -62,7 +63,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* Formulaire */}
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="url" className="sr-only">
@@ -95,7 +96,7 @@ export default function HomePage() {
           </button>
         </form>
 
-        {/* Barre de progression (pendant chargement) */}
+        {/* Progress bar (while loading) */}
         {loading && (
           <div className="mt-6 h-1 rounded-full bg-zinc-800 overflow-hidden">
             <div
@@ -104,7 +105,7 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Erreur */}
+        {/* Error display */}
         {error && (
           <div
             role="alert"

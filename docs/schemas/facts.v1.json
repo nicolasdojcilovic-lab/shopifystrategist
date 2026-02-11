@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shopifystrategist.app/schemas/facts.v1.json",
+  "title": "Facts v1",
+  "description": "Faits bruts issus du scraper (ShopifyFacts)",
+  "$defs": {
+    "pdp_facts": {
+      "type": "object",
+      "properties": {
+        "title": { "type": ["string", "null"] },
+        "price": { "type": ["string", "null"] },
+        "currency": { "type": ["string", "null"] },
+        "hasSalePrice": { "type": "boolean" },
+        "regularPrice": { "type": ["string", "null"] },
+        "salePrice": { "type": ["string", "null"] },
+        "hasAtcButton": { "type": "boolean" },
+        "atcText": { "type": ["string", "null"] },
+        "atcButtonCount": { "type": "integer", "minimum": 0 },
+        "hasVariantSelector": { "type": "boolean" },
+        "variantTypes": { "type": "array", "items": { "type": "string" } },
+        "inStock": { "type": ["boolean", "null"] },
+        "stockText": { "type": ["string", "null"] },
+        "hasDescription": { "type": "boolean" },
+        "descriptionLength": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["hasAtcButton", "hasVariantSelector", "hasDescription", "descriptionLength"]
+    },
+    "structure_facts": {
+      "type": "object",
+      "properties": {
+        "h1Count": { "type": "integer", "minimum": 0 },
+        "mainH1Text": { "type": ["string", "null"] },
+        "h2Count": { "type": "integer", "minimum": 0 },
+        "h3Count": { "type": "integer", "minimum": 0 },
+        "imageCount": { "type": "integer", "minimum": 0 },
+        "imagesWithoutAlt": { "type": "integer", "minimum": 0 },
+        "imagesWithLazyLoad": { "type": "integer", "minimum": 0 },
+        "hasReviewsSection": { "type": "boolean" },
+        "hasShippingInfo": { "type": "boolean" },
+        "hasReturnPolicy": { "type": "boolean" },
+        "hasSocialProof": { "type": "boolean" },
+        "formCount": { "type": "integer", "minimum": 0 },
+        "hasNewsletterForm": { "type": "boolean" }
+      }
+    },
+    "technical_facts": {
+      "type": "object",
+      "properties": {
+        "isShopify": { "type": "boolean" },
+        "shopifyVersion": { "type": ["string", "null"] },
+        "themeName": { "type": ["string", "null"] },
+        "detectedApps": { "type": "array", "items": { "type": "string" } },
+        "hasGoogleAnalytics": { "type": "boolean" },
+        "hasFacebookPixel": { "type": "boolean" },
+        "hasKlaviyo": { "type": "boolean" },
+        "hasSkipLink": { "type": "boolean" },
+        "hasAriaLabels": { "type": "boolean" },
+        "langAttribute": { "type": ["string", "null"] }
+      }
+    },
+    "facts_meta": {
+      "type": "object",
+      "properties": {
+        "parsingDuration": { "type": "number" },
+        "descriptionSource": { "type": "string" }
+      }
+    }
+  },
+  "type": "object",
+  "properties": {
+    "pdp": { "$ref": "#/$defs/pdp_facts" },
+    "structure": { "$ref": "#/$defs/structure_facts" },
+    "technical": { "$ref": "#/$defs/technical_facts" },
+    "meta": { "$ref": "#/$defs/facts_meta" }
+  },
+  "required": ["pdp", "structure", "technical", "meta"]
+}

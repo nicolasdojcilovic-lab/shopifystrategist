@@ -1,19 +1,19 @@
-# Validation des Schémas Zod (SSOT)
+# Zod Schema Validation (SSOT)
 
-**Date** : 2026-01-23  
-**Statut** : ✅ **VALIDÉ ET CONFORME SSOT**
+**Date** : 2026-02-08  
+**Status** : ✅ **VALIDATED AND SSOT-COMPLIANT**
 
 ---
 
-## 📋 Schémas Générés
+## 📋 Generated Schemas
 
 ### 1. `evidence-v2.ts` (EVIDENCE_SCHEMA_VERSION = 2)
 
-**Référence SSOT** :
+**SSOT Reference**:
 - `docs/REPORT_OUTLINE.md` section 9
 - `docs/SCORING_AND_DETECTION.md` section 3.2
 
-**Enums et Types Exportés** :
+**Exported Enums and Types**:
 
 ```typescript
 // Enums
@@ -31,7 +31,7 @@ MissingEvidenceReasonSchema: z.enum([
   'unknown_render_issue',
 ])
 
-// Schéma Principal
+// Main Schema
 EvidenceV2Schema: z.object({
   evidence_id: z.string(),
   level: EvidenceLevelSchema,
@@ -54,13 +54,13 @@ export type EvidenceCompleteness = z.infer<typeof EvidenceCompletenessSchema>
 export type MissingEvidenceReason = z.infer<typeof MissingEvidenceReasonSchema>
 ```
 
-**Helpers Inclus** :
-- ✅ `generateEvidenceId()` : Génération d'ID déterministe
-- ✅ `generateEvidenceAnchor()` : Génération ancre HTML (#evidence-<id>)
-- ✅ `ScreenshotMetadataSchema` : Structure recommandée pour details
-- ✅ `MeasurementMetadataSchema` : Structure recommandée pour details
+**Included Helpers**:
+- ✅ `generateEvidenceId()`: Deterministic ID generation
+- ✅ `generateEvidenceAnchor()`: HTML anchor generation (#evidence-<id>)
+- ✅ `ScreenshotMetadataSchema`: Recommended structure for details
+- ✅ `MeasurementMetadataSchema`: Recommended structure for details
 
-**Règles Dures Implémentées** :
+**Implemented Hard Rules**:
 - ✅ `ref` DOIT être au format `#evidence-<evidence_id>` (validation regex)
 - ✅ `timestamp` DOIT être ISO 8601 (validation Zod)
 - ✅ `evidence_id` format déterministe documenté
@@ -69,17 +69,17 @@ export type MissingEvidenceReason = z.infer<typeof MissingEvidenceReasonSchema>
 
 ### 2. `ticket-v2.ts` (TICKET_SCHEMA_VERSION = 2)
 
-**Référence SSOT** :
+**SSOT Reference**:
 - `docs/REPORT_OUTLINE.md` section 8
 - `docs/SCORING_AND_DETECTION.md` section 3.1
 
-**Enums et Types Exportés** :
+**Exported Enums and Types**:
 
 ```typescript
 // Enums
 TicketModeSchema: z.enum(['solo', 'duo_ab', 'duo_before_after'])
 TicketImpactSchema: z.enum(['high', 'medium', 'low'])
-TicketEffortSchema: z.enum(['small', 'medium', 'large'])
+TicketEffortSchema: z.enum(['s', 'm', 'l'])  // REGISTRY SSOT
 TicketRiskSchema: z.enum(['low', 'medium', 'high'])
 TicketConfidenceSchema: z.enum(['high', 'medium', 'low'])
 TicketCategorySchema: z.enum([
@@ -92,24 +92,24 @@ TicketCategorySchema: z.enum([
   'accessibility',
   'comparison',
 ])
-TicketOwnerHintSchema: z.enum(['design', 'dev', 'content', 'ops'])
+TicketOwnerSchema: z.enum(['cro', 'copy', 'design', 'dev', 'merch', 'data'])  // REGISTRY SSOT
 
-// Schéma Principal
+// Main Schema
 TicketV2Schema: z.object({
   ticket_id: z.string(),
   mode: TicketModeSchema,
   title: z.string(),
   impact: TicketImpactSchema,
-  effort: TicketEffortSchema,
+  effort: TicketEffortSchema,  // s|m|l per REGISTRY
   risk: TicketRiskSchema,
   confidence: TicketConfidenceSchema,
   category: TicketCategorySchema,
   why: z.string(),
-  evidence_refs: z.array(z.string()).min(1),  // ⚠️ RÈGLE DURE (≥1)
-  how_to: z.array(z.string()).min(3).max(7),   // ⚠️ RÈGLE DURE (3-7)
+  evidence_refs: z.array(z.string()).min(1),  // ⚠️ HARD RULE (≥1)
+  how_to: z.array(z.string()).min(3).max(7),   // ⚠️ HARD RULE (3-7)
   validation: z.array(z.string()),
   quick_win: z.boolean(),
-  owner_hint: TicketOwnerHintSchema,
+  owner: TicketOwnerSchema.optional(),
   notes: z.string().optional(),
 })
 
@@ -120,46 +120,46 @@ export type TicketEffort = z.infer<typeof TicketEffortSchema>
 export type TicketRisk = z.infer<typeof TicketRiskSchema>
 export type TicketConfidence = z.infer<typeof TicketConfidenceSchema>
 export type TicketCategory = z.infer<typeof TicketCategorySchema>
-export type TicketOwnerHint = z.infer<typeof TicketOwnerHintSchema>
+export type TicketOwner = z.infer<typeof TicketOwnerSchema>
 export type TicketV2 = z.infer<typeof TicketV2Schema>
 ```
 
-**Fonctions Incluses** :
-- ✅ `calculatePriorityScore()` : Calcul du score (impact*3 + confidence*2 - effort*2 - risk*1)
-- ✅ `sortTicketsStable()` : Tri stable selon ordre SSOT (6 niveaux)
-- ✅ `filterTopActionsGuardrails()` : Application garde-fous (confidence≠low, max 2 large effort)
-- ✅ `extractQuickWins()` : Extraction quick wins (effort=small, confidence≥medium)
+**Included Functions**:
+- ✅ `calculatePriorityScore()`: Score calculation (impact*3 + confidence*2 - effort*2 - risk*1)
+- ✅ `sortTicketsStable()`: Stable sort per SSOT order (6 levels)
+- ✅ `filterTopActionsGuardrails()`: Apply guardrails (confidence≠low, max 2 effort=l)
+- ✅ `extractQuickWins()`: Extract quick wins (effort=s, confidence≥medium)
 
-**Règles Dures Implémentées** :
-- ✅ `evidence_refs` DOIT contenir ≥ 1 élément (validation Zod)
-- ✅ `how_to` DOIT contenir 3-7 étapes (validation Zod)
+**Implemented Hard Rules**:
+- ✅ `evidence_refs` MUST contain ≥ 1 element (Zod validation)
+- ✅ `how_to` MUST contain 3-7 steps (Zod validation)
 - ✅ `ticket_id` format déterministe documenté
 
 ---
 
-## ✅ Conformité SSOT
+## ✅ SSOT Compliance
 
-### Règles SSOT Respectées
+### SSOT Rules Respected
 
-| Règle | Evidence v2 | Ticket v2 | Référence |
+| Rule | Evidence v2 | Ticket v2 | Reference |
 |-------|-------------|-----------|-----------|
 | **Evidence-based** | N/A | ✅ `evidence_refs.min(1)` | REPORT_OUTLINE section 2.1 |
 | **Ancre HTML stable** | ✅ `ref.regex(/^#evidence-/)` | N/A | REPORT_OUTLINE section 9.1.1 |
-| **IDs déterministes** | ✅ Format documenté | ✅ Format documenté | SCORING section 4 |
-| **Enums stables** | ✅ Tous les enums | ✅ Tous les enums | REPORT_OUTLINE section 8-9 |
+| **Deterministic IDs** | ✅ Format documented | ✅ Format documented | SCORING section 4 |
+| **Stable enums** | ✅ All enums | ✅ All enums | REPORT_OUTLINE section 8-9 |
 | **How_to 3-7 steps** | N/A | ✅ `.min(3).max(7)` | REPORT_OUTLINE section 8.1 |
 | **Timestamp ISO 8601** | ✅ `.datetime()` | N/A | REPORT_OUTLINE section 9.1 |
-| **Confidence mapping** | ✅ Documenté | ✅ Documenté | REPORT_OUTLINE section 8.2 |
-| **PriorityScore** | N/A | ✅ Fonction implémentée | SCORING section 5.1 |
-| **Tri stable** | N/A | ✅ Fonction implémentée | SCORING section 5.2 |
+| **Confidence mapping** | ✅ Documented | ✅ Documented | REPORT_OUTLINE section 8.2 |
+| **PriorityScore** | N/A | ✅ Function implemented | SCORING section 5.1 |
+| **Stable sort** | N/A | ✅ Function implemented | SCORING section 5.2 |
 
-### Commentaires SSOT
+### SSOT Comments
 
-✅ **Tous les fichiers incluent** :
+✅ **All files include**:
 - Warning header "⚠️ CONTRAT SSOT"
-- Instructions "NE PAS MODIFIER sans mise à jour docs SSOT"
-- Références exactes aux sections des docs SSOT
-- Documentation complète de chaque enum/field
+- Instructions "DO NOT MODIFY without SSOT docs update"
+- Exact references to SSOT doc sections
+- Complete documentation of each enum/field
 
 ---
 
@@ -168,10 +168,10 @@ export type TicketV2 = z.infer<typeof TicketV2Schema>
 ### Syntaxe TypeScript
 ```bash
 $ node --check src/contracts/export/evidence-v2.ts
-✓ Aucune erreur
+✓ No errors
 
 $ node --check src/contracts/export/ticket-v2.ts
-✓ Aucune erreur
+✓ No errors
 ```
 
 ### Exports
@@ -182,7 +182,7 @@ export * from './ticket-v2';    ✓
 export * from './csv.v1';       ✓
 ```
 
-### Types Exportés
+### Exported Types
 
 **Evidence v2** :
 - ✅ 7 enums (Level, Type, Source, Viewport, Completeness, MissingReason, + metadata)
@@ -196,29 +196,29 @@ export * from './csv.v1';       ✓
 
 ---
 
-## 📊 Comparaison avec Schémas Précédents
+## 📊 Comparison with Previous Schemas
 
-| Aspect | `ticket.v2.ts` (ancien) | `ticket-v2.ts` (nouveau) |
+| Aspect | `ticket.v2.ts` (legacy) | `ticket-v2.ts` (current) |
 |--------|-------------------------|--------------------------|
-| **Nom fichier** | Point dans nom | Tiret (plus standard) |
-| **Header SSOT** | ✓ Présent | ✅ Enrichi + warnings explicites |
-| **Enums** | ✓ Présents | ✅ Identiques + docs complètes |
-| **Règles dures** | ✓ Implémentées | ✅ + Messages d'erreur Zod custom |
-| **Fonctions** | ✓ Présentes | ✅ Identiques + docs enrichies |
+| **File name** | Dot in name | Dash (more standard) |
+| **SSOT Header** | ✓ Present | ✅ Enriched + explicit warnings |
+| **Enums** | ✓ Present | ✅ Identical + complete docs |
+| **Hard rules** | ✓ Implemented | ✅ + Custom Zod error messages |
+| **Functions** | ✓ Present | ✅ Identical + enriched docs |
 
-**Conclusion** : Les nouveaux schémas sont **strictement équivalents** fonctionnellement, mais avec :
-- Nommage plus standard (tirets au lieu de points)
-- Documentation enrichie (références SSOT précises)
-- Messages d'erreur Zod custom (meilleure DX)
+**Conclusion**: The current schemas are **strictly equivalent** functionally, but with:
+- More standard naming (dashes instead of dots)
+- Enriched documentation (precise SSOT references)
+- Custom Zod error messages (better DX)
 
 ---
 
-## 🎯 Utilisation
+## 🎯 Usage
 
-### Import Recommandé
+### Recommended Import
 
 ```typescript
-// Import depuis index (recommandé)
+// Import from index (recommended)
 import {
   // Evidence v2
   EvidenceV2Schema,
@@ -235,7 +235,7 @@ import {
   sortTicketsStable,
 } from '@contracts/export';
 
-// OU import direct
+// OR direct import
 import { EvidenceV2Schema } from '@contracts/export/evidence-v2';
 import { TicketV2Schema } from '@contracts/export/ticket-v2';
 ```
@@ -243,7 +243,7 @@ import { TicketV2Schema } from '@contracts/export/ticket-v2';
 ### Validation Runtime
 
 ```typescript
-// Valider une evidence
+// Validate an evidence
 const evidence = {
   evidence_id: 'E_page_a_mobile_screenshot_above_fold_01',
   level: 'A',
@@ -256,83 +256,85 @@ const evidence = {
 };
 
 const validatedEvidence = EvidenceV2Schema.parse(evidence);
-// ✓ OK si conforme, throw ZodError sinon
+// ✓ OK if compliant, throw ZodError otherwise
 
-// Valider un ticket
+// Validate a ticket
 const ticket = {
   ticket_id: 'T_solo_offer_clarity_SIG_OFFER_02_pdp_01',
   mode: 'solo',
-  title: 'Afficher le prix dans le bloc d\'achat',
+  title: 'Display price in the buybox',
   impact: 'high',
-  effort: 'small',
+  effort: 's',
   risk: 'low',
   confidence: 'high',
   category: 'offer_clarity',
-  why: 'Le prix n\'est pas visible...',
+  why: 'Price is not visible...',
   evidence_refs: ['E_page_a_mobile_screenshot_above_fold_01'],
   how_to: ['Step 1', 'Step 2', 'Step 3'],
   validation: ['Check 1'],
   quick_win: true,
-  owner_hint: 'design',
+  owner: 'design',
 };
 
 const validatedTicket = TicketV2Schema.parse(ticket);
-// ✓ OK si conforme (evidence_refs.length >= 1, how_to.length 3-7)
+// ✓ OK if compliant (evidence_refs.length >= 1, how_to.length 3-7)
 ```
 
-### Tri et Filtrage
+### Sort and Filter
 
 ```typescript
 import { sortTicketsStable, filterTopActionsGuardrails } from '@contracts/export';
 
-// Tri stable
+// Stable sort
 const sortedTickets = sortTicketsStable(rawTickets);
 
-// Application garde-fous Top Actions
+// Apply Top Actions guardrails
 const topActions = filterTopActionsGuardrails(sortedTickets);
-// → Exclut confidence=low, max 2 effort=large
+// → Excludes confidence=low, max 2 effort=l
 ```
 
 ---
 
 ## ⚠️ Anti-Drift Guarantees
 
-### Fichiers Protégés
+### Protected Files
 
-Ces schémas sont des **contrats SSOT stables**.
+These schemas are **stable SSOT contracts**.
 
-❌ **Interdictions** :
+❌ **Prohibitions**:
 - Ajouter/supprimer/renommer un champ sans bump version
-- Modifier un enum sans mise à jour docs SSOT
+- Modify an enum without SSOT docs update
 - Changer les règles de validation (min/max/regex) sans SSOT
 
-✅ **Autorisé** (sans version bump) :
-- Améliorer les commentaires/documentation
-- Ajouter des helpers (sans changer le schéma)
-- Enrichir les messages d'erreur Zod
+✅ **Allowed** (without version bump):
+- Improve comments/documentation
+- Add helpers (without changing schema)
+- Enrich Zod error messages
 
-### Processus de Modification
+### Modification Process
 
-Si modification nécessaire :
+If modification is required:
 
-1. **Mise à jour docs SSOT** :
+1. **Update SSOT docs**:
    - `docs/REPORT_OUTLINE.md` (sections 8-9)
    - `docs/SCORING_AND_DETECTION.md` (sections 3.1-3.2)
 
-2. **Bump version** :
+2. **Bump version**:
    - Dans docs SSOT (TICKET_SCHEMA_VERSION ou EVIDENCE_SCHEMA_VERSION)
    - Dans `src/ssot/versions.ts`
 
-3. **Migration données** :
-   - Script de migration si données existantes
-   - Tests de non-régression
+3. **Data migration**:
+   - Migration script if existing data
+   - Non-regression tests
 
-4. **Mise à jour schéma** :
+4. **Update schema**:
    - Modifier `ticket-v2.ts` ou `evidence-v2.ts`
-   - Valider avec `node --check`
+   - Validate with `node --check`
 
 ---
 
-**Date de validation** : 2026-01-23  
-**Validé par** : Contract-First + Validation SSOT  
-**Drift Risk** : ZERO (schémas extraits strictement des docs SSOT)
+**Validation date** : 2026-02-08  
+**Validated by**: Contract-First + SSOT Validation  
+**Drift Risk**: ZERO (schemas extracted strictly from SSOT docs)
+
+*Last Updated: 2026-02-08*

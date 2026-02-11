@@ -1,19 +1,19 @@
 /**
  * CSV Export Schema v1 (SSOT)
  * 
- * Format d'export CSV stable pour les tickets.
+ * Stable CSV export format for tickets.
  * Conforme à: docs/REPORT_OUTLINE.md section 12 (CSV_EXPORT_VERSION: 1)
  * 
- * RÈGLE DURE : Aucun nouveau champ sans bump de version + mise à jour docs SSOT.
+ * HARD RULE: No new field without version bump + SSOT docs update.
  */
 
 import { z } from 'zod';
 import type { TicketV2 } from './ticket.v2';
 
 /**
- * Schéma CSV Export v1 (colonnes fixes)
- * 
- * Référence SSOT: docs/REPORT_OUTLINE.md section 12
+ * CSV Export schema v1 (fixed columns)
+ *
+ * SSOT Reference: docs/REPORT_OUTLINE.md section 12
  */
 export const CSVExportV1Schema = z.object({
   ticket_id: z.string(),
@@ -26,29 +26,29 @@ export const CSVExportV1Schema = z.object({
   category: z.string(),
   why: z.string(),
   
-  // Séparateur: |
+  // Separator: |
   evidence_refs: z.string(),
   how_to: z.string(),
   validation: z.string(),
   
   quick_win: z.string(), // "true" ou "false"
-  owner_hint: z.string(),
+  owner: z.string(),
   
-  // URL de contexte (sur quelle URL agir)
+  // URL context (which URL to act on)
   // SOLO: <audited_pdp_url>
-  // DUO AB: <url_a> ou <url_b> ou <url_a>|<url_b> (si scope=gap)
-  // DUO Before/After: <url_before> ou <url_after> ou <url_before>|<url_after> (si scope=diff)
+  // DUO AB: <url_a> or <url_b> or <url_a>|<url_b> (if scope=gap)
+  // DUO Before/After: <url_before> or <url_after> or <url_before>|<url_after> (if scope=diff)
   url_context: z.string(),
 });
 
 export type CSVExportV1 = z.infer<typeof CSVExportV1Schema>;
 
 /**
- * Convertir un Ticket v2 en ligne CSV v1
- * 
- * @param ticket - Ticket v2 à convertir
- * @param urlContext - URL(s) de contexte (selon mode et scope)
- * @returns Ligne CSV v1
+ * Convert a Ticket v2 to CSV v1 row
+ *
+ * @param ticket - Ticket v2 to convert
+ * @param urlContext - URL(s) context (per mode and scope)
+ * @returns CSV v1 row
  */
 export function ticketToCSV(ticket: TicketV2, urlContext: string): CSVExportV1 {
   return {
@@ -68,13 +68,13 @@ export function ticketToCSV(ticket: TicketV2, urlContext: string): CSVExportV1 {
     validation: ticket.validation.join('|'),
     
     quick_win: ticket.quick_win.toString(),
-    owner_hint: ticket.owner_hint,
+    owner: ticket.owner ?? (ticket as { owner_hint?: string }).owner_hint ?? 'dev',
     url_context: urlContext,
   };
 }
 
 /**
- * Générer le header CSV v1 (colonnes fixes)
+ * Generate CSV v1 header (fixed columns)
  */
 export function getCSVHeader(): string[] {
   return [
@@ -91,13 +91,13 @@ export function getCSVHeader(): string[] {
     'how_to',
     'validation',
     'quick_win',
-    'owner_hint',
+    'owner',
     'url_context',
   ];
 }
 
 /**
- * Convertir une ligne CSV v1 en tableau de valeurs
+ * Convert a CSV v1 row to value array
  */
 export function csvRowToArray(row: CSVExportV1): string[] {
   return [
@@ -114,17 +114,17 @@ export function csvRowToArray(row: CSVExportV1): string[] {
     row.how_to,
     row.validation,
     row.quick_win,
-    row.owner_hint,
+    row.owner,
     row.url_context,
   ];
 }
 
 /**
- * Échapper une valeur CSV (selon RFC 4180)
- * 
- * Règles:
- * - Si contient virgule, guillemet, ou newline → entourer de guillemets
- * - Doubler les guillemets internes
+ * Escape a CSV value (per RFC 4180)
+ *
+ * Rules:
+ * - If contains comma, quote, or newline → wrap in quotes
+ * - Double internal quotes
  */
 export function escapeCSVValue(value: string): string {
   if (value.includes(',') || value.includes('"') || value.includes('\n')) {
@@ -134,11 +134,11 @@ export function escapeCSVValue(value: string): string {
 }
 
 /**
- * Générer un fichier CSV complet
- * 
- * @param tickets - Liste de tickets v2
+ * Generate a complete CSV file
+ *
+ * @param tickets - List of tickets v2
  * @param urlContextMap - Map ticket_id → url_context
- * @returns Contenu CSV (string)
+ * @returns CSV content (string)
  */
 export function generateCSV(
   tickets: TicketV2[],

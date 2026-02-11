@@ -1,9 +1,12 @@
 # ShopifyStrategist — SCORING_AND_DETECTION.md (SSOT) — v2.3
 ## Owned Concepts (Canonical)
-- TBD
+- Signal-to-ticket mapping and prioritization rules
+- Ticket v2 and Evidence v2 export formats
 
 ## Not Owned (References)
-- TBD
+- **Persistence**: Prisma with Supabase PostgreSQL
+- **Capture**: Playwright-based capture (Desktop/Mobile)
+- **Storage**: Supabase Storage Buckets
 
 **Status:** SSOT  
 **Owner:** Nicolas  

@@ -1,15 +1,17 @@
 /**
  * API Route: GET /api/audit/[auditKey]
  *
- * Récupère le statut d'un audit et les URLs des rapports (HTML, PDF).
- * Utilisé pour le polling sur la page /audit/[auditKey].
+ * Returns audit status and report URLs (HTML, PDF).
+ * Used for polling on page /audit/[auditKey].
  *
  * Response: { status, message?, reportUrls?: { html?, pdf? } }
+ * STATUS_MESSAGES values are French UI strings for the frontend.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+/** Display messages for audit status (French UI) */
 const STATUS_MESSAGES: Record<string, string> = {
   PENDING: 'Capture des écrans en cours...',
   GENERATING_REPORT: 'Génération du PDF...',
@@ -24,7 +26,7 @@ export async function GET(
 
   if (!auditKey) {
     return NextResponse.json(
-      { error: 'auditKey requis', code: 'MISSING_AUDIT_KEY' },
+      { error: 'auditKey required', code: 'MISSING_AUDIT_KEY' },
       { status: 400 }
     );
   }
@@ -39,7 +41,7 @@ export async function GET(
 
     if (!auditJob) {
       return NextResponse.json(
-        { error: 'Audit introuvable', code: 'NOT_FOUND', status: 'PENDING', message: 'Démarrage...' },
+        { error: 'Audit not found', code: 'NOT_FOUND', status: 'PENDING', message: 'Démarrage...' },
         { status: 404 }
       );
     }
@@ -47,7 +49,7 @@ export async function GET(
     const status = auditJob.status as string;
     const message = STATUS_MESSAGES[status] ?? status;
 
-    // reportUrls dans ScoreRun.exports
+    // reportUrls in ScoreRun.exports
     let reportUrls: { html?: string; pdf?: string } | undefined;
 
     if (auditJob.runKey && auditJob.scoreRun) {
@@ -61,9 +63,9 @@ export async function GET(
       reportUrls,
     });
   } catch (error) {
-    console.error('[API /api/audit/[auditKey] GET]', error);
+    console.error('[API GET /api/audit/[auditKey]]', error);
 
-    const err = error instanceof Error ? error.message : 'Erreur inconnue';
+    const err = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
       { error: err, code: 'DB_ERROR' },
       { status: 500 }

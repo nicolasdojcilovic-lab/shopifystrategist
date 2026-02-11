@@ -10,6 +10,9 @@
   "overrides": {
     "esbuild": "0.25.0"
   },
+  "engines": {
+    "node": ">=20.18.0 <21"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -22,8 +25,6 @@
     "test:db": "tsx scripts/test-prisma.ts",
     "test:capture": "tsx scripts/test-capture.ts",
     "test:playwright": "tsx scripts/test-playwright.ts",
-    "test:playwright:simple": "tsx scripts/test-playwright-simple.ts",
-    "test:shopify:light": "tsx scripts/test-shopify-light.ts",
     "test:parallel": "tsx scripts/test-parallel.ts",
     "test:storage": "tsx scripts/test-storage.ts",
     "test:audit": "tsx scripts/test-audit.ts",
@@ -32,7 +33,8 @@
     "test:ai-synthesizer": "tsx scripts/test-ai-synthesizer.ts",
     "test:report-generator": "tsx scripts/test-report-generator.ts",
     "test:pdf-generator": "tsx scripts/test-pdf-generator.ts",
-    "verify:real-pdp": "tsx scripts/verify-real-pdp.ts",
+    "diag:scraper": "tsx scripts/diag-live-scraper.ts",
+    "diag:mass": "tsx scripts/mass-diag-scraper.ts",
     "benchmark:capture": "tsx scripts/benchmark-capture.ts",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -44,18 +46,19 @@
     "db:seed": "tsx prisma/seed.ts",
     "ssot:sync": "node scripts/ssot/sync.mjs",
     "ssot:check": "node scripts/ssot/check.mjs",
-    "ssot:validate": "SSOT_STRICT=1 node scripts/SSOT/check.mjs",
+    "ssot:validate": "SSOT_STRICT=1 node scripts/ssot/check.mjs",
     "ssot:normalize": "node scripts/ssot/normalize.mjs",
     "prepare": "husky"
   },
   "dependencies": {
+    "ajv": "^8.17.1",
     "@ai-sdk/openai": "^3.0.18",
     "@prisma/client": "^5.9.0",
     "@supabase/supabase-js": "^2.39.0",
     "ai": "^6.0.49",
     "cheerio": "^1.2.0",
     "dotenv": "^16.6.1",
-    "next": "^15.5.10",
+    "next": "^15.5.12",
     "openai": "^6.16.0",
     "playwright": "^1.40.0",
     "react": "^18.3.0",

@@ -1,10 +1,13 @@
 # ShopifyStrategist — SMOKE_AND_QA_SPEC.md (SSOT)
 
 ## Owned Concepts (Canonical)
-- TBD
+- Smoke test scenarios and acceptance criteria
+- QA gates and anti-drift assertions
 
 ## Not Owned (References)
-- TBD
+- **Persistence**: Prisma with Supabase PostgreSQL
+- **Capture**: Playwright-based capture (Desktop/Mobile)
+- **Storage**: Supabase Storage Buckets
 
 - **SMOKE_AND_QA_SPEC_VERSION :** 1.2
 - **Goal :** Define the **smoke tests** and **QA gates** that guarantee anti-drift on the API and deliverables (**HTML SSOT**, **PDF strictly derived**, CSV v1, Ticket/Evidence v2 exports).
@@ -64,7 +67,7 @@ A **release-blocking** condition. If a gate fails: release is blocked.
 > to validate allowed nulls.
 
 ### S1 — SOLO Instant (baseline)
-- Endpoint : `POST /api/audit-solo`
+- Endpoint : `POST /api/audit/solo`
 - Options : `copy_ready=false`
 - Expected:
   - `status="ok"`
@@ -76,7 +79,7 @@ A **release-blocking** condition. If a gate fails: release is blocked.
   - `versions` present **according to `docs/SSOT/API_DOC.md`** (this document does not redefine the list)
 
 ### S2 — SOLO Client-Ready (copy-ready)
-- Endpoint : `POST /api/audit-solo`
+- Endpoint : `POST /api/audit/solo`
 - Options : `copy_ready=true`
 - Expected (in addition to S1):
   - **Exports strictly unchanged vs S1**: same `ticket_id`, same `evidence_id`, same order, same exported content (tickets/evidences/CSV).
@@ -86,7 +89,7 @@ A **release-blocking** condition. If a gate fails: release is blocked.
     - `audit_key` and `render_key` **may** change (because HTML/PDF change).
 
 ### S3 — DUO AB
-- Endpoint : `POST /api/audit-duo`
+- Endpoint : `POST /api/audit/duo`
 - `compare_type="ab"` (page_a vs page_b)
 - Expected:
   - `status="ok"`
@@ -96,7 +99,7 @@ A **release-blocking** condition. If a gate fails: release is blocked.
   - `errors[]` : each entry has `source ∈ {page_a, page_b, na}`
 
 ### S4 — DUO Before/After
-- Endpoint : `POST /api/audit-duo`
+- Endpoint : `POST /api/audit/duo`
 - `compare_type="before_after"` (before vs after)
 - Expected:
   - `status="ok"`

@@ -122,13 +122,18 @@ console.log(`${colors.green}✅ Succès${colors.reset}`);
 
 ---
 
-## 🧪 Tests vs Scripts
+## 🧪 Tests vs Scripts vs Diag (Elite)
 
-| Type | Outil | Localisation | Usage |
-|------|-------|--------------|-------|
-| **Tests unitaires** | Jest/Vitest | `src/**/*.test.ts` | `npm test` |
-| **Scripts debug** | tsx | `scripts/*.ts` | `npm run debug:*` |
-| **Smoke tests** | Node.js | `scripts/smoke.mjs` | `npm run smoke` |
+| Type | Outil | Localisation | Usage | Rôle |
+|------|-------|--------------|-------|------|
+| **Tests unitaires** | Jest/Vitest | `src/**/*.test.ts` | `npm test` | Tests automatisés |
+| **Scripts debug** | tsx | `scripts/*.ts` | `npm run debug:*` | Debug clés |
+| **Smoke tests** | Node.js | `scripts/smoke.mjs` | `npm run smoke` | Conformité SSOT |
+| **test-capture.ts** | tsx | scripts/ | `npm run test:capture` | Unitaire : Playwright capture seule |
+| **diag-live-scraper.ts** | tsx | scripts/ | `npm run diag:scraper` | Diagnostic 1 URL : capture + facts + drift report |
+| **mass-diag-scraper.ts** | tsx | scripts/ | `npm run diag:mass` | Diagnostic multi-sites (batch) |
+
+**Différence test-capture vs diag-live-scraper** : `test-capture` teste uniquement la capture Playwright. `diag-live-scraper` fait capture + facts + rapport de drift (diagnostic complet Elite).
 
 ---
 

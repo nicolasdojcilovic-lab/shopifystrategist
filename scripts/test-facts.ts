@@ -77,7 +77,7 @@ async function main() {
   console.log('📋 TEST 1 — HTML Mock (Simple PDP)');
   console.log('════════════════════════════════════════════════════════════\n');
 
-  const facts1 = collectFacts(MOCK_HTML, {
+  const facts1 = await collectFacts(MOCK_HTML, {
     strictMode: true,
     locale: 'en',
   });
@@ -234,7 +234,7 @@ async function main() {
   if (realHtml && realHtmlPath) {
     console.log(`📄 HTML trouvé: ${realHtmlPath}\n`);
 
-    const facts2 = collectFacts(realHtml, {
+    const facts2 = await collectFacts(realHtml, {
       strictMode: true,
       locale: 'en',
     });

@@ -1,10 +1,13 @@
 # ShopifyStrategist — DETECTORS_SPEC.md (SSOT-aligned)
 
 ## Owned Concepts (Canonical)
-- TBD
+- Detector contracts and fact output formats
+- PDP, structural, and technical detector specs
 
 ## Not Owned (References)
-- TBD
+- **Persistence**: Prisma with Supabase PostgreSQL
+- **Capture**: Playwright-based capture (Desktop/Mobile)
+- **Storage**: Supabase Storage Buckets
 
 **Role:** SSOT specification of the *facts layer* (detectors) — **MVP**
 

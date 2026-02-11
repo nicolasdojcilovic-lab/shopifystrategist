@@ -1,9 +1,10 @@
 # SSOT Conventions (v1.0)
 ## Owned Concepts (Canonical)
-- TBD
+- SSOT document language policy (English-only)
+- Naming and reference conventions for SSOT docs
 
 ## Not Owned (References)
-- TBD
+- Individual spec content (owned by respective SSOT docs)
 
 ## SSOT Language Policy (MUST)
 

@@ -14,6 +14,7 @@
 
 import { chromium, type Browser, type Page, type BrowserContext } from 'playwright';
 import type { EvidenceViewport } from '@/contracts/export/evidence.v2';
+import { getErrorCode } from '@/lib/error-utils';
 
 /**
  * Viewports standards Shopify (SSOT)
@@ -53,6 +54,8 @@ export interface CaptureResult {
     deviceScaleFactor: number;
     loadDurationMs: number;
     fullPageHeight: number;
+    /** LCP in ms (Scoring Engine v1.1), from Performance API when available */
+    lcpMs?: number;
   };
 }
 
@@ -162,12 +165,13 @@ const BLOCKED_PATTERNS = [
 /**
  * ⚡ AGGRESSIVE — Vérifier si une URL/ressource doit être bloquée
  * 
- * Mode ultra-agressif : bloque fonts, media, other pour performance maximale
+ * Mode ultra-agressif : bloque fonts, media, images, stylesheets pour performance maximale
+ * On ne veut que le HTML Structurel pour extraction facts
  */
 function shouldBlockResource(url: string, resourceType: string): boolean {
   const urlLower = url.toLowerCase();
   
-  // ⚡ AGGRESSIVE: Bloquer TOUS les media (vidéos) - non négociable
+  // ⚡ AGGRESSIVE: Block ALL media (videos) - non-negotiable
   if (resourceType === 'media') {
     return true;
   }
@@ -176,6 +180,19 @@ function shouldBlockResource(url: string, resourceType: string): boolean {
   if (resourceType === 'font') {
     return true;
   }
+  
+  // ⚡ AGGRESSIVE: Block ALL images (except if needed for critical layout)
+  // Pour extraction facts, on n'a besoin que du HTML structurel
+  if (resourceType === 'image') {
+    return true; // Bloquer toutes les images pour performance maximale
+  }
+  
+  // ⚠️ ASSOUPLISSEMENT: Ne PAS bloquer stylesheets (CSS)
+  // Some sites (e.g. Gymshark) need them to trigger React component rendering
+  // Stylesheets are required for correct rendering of critical elements
+  // if (resourceType === 'stylesheet') {
+  //   return true; // DÉSACTIVÉ pour Gymshark et sites React
+  // }
   
   // ⚡ AGGRESSIVE: Bloquer "other" (souvent du tracking)
   if (resourceType === 'other') {
@@ -187,18 +204,18 @@ function shouldBlockResource(url: string, resourceType: string): boolean {
     return true;
   }
   
-  // Bloquer domaines tracking/analytics
+  // Bloquer domaines tracking/analytics (google-analytics, facebook-pixel via regex)
   if (BLOCKED_DOMAINS.some(domain => urlLower.includes(domain))) {
     return true;
   }
   
-  // Bloquer patterns tracking
+  // Bloquer patterns tracking (google-analytics, facebook-pixel)
   if (BLOCKED_PATTERNS.some(pattern => urlLower.includes(pattern))) {
     return true;
   }
   
-  // Bloquer GIF animés lourds
-  if (resourceType === 'image' && (urlLower.includes('giphy') || urlLower.includes('tenor'))) {
+  // Bloquer explicitement google-analytics et facebook-pixel via regex
+  if (/google-analytics|googletagmanager|facebook\.net|fbevents/i.test(urlLower)) {
     return true;
   }
   
@@ -320,7 +337,12 @@ export class PlaywrightService {
       // Viewport config
       const viewportConfig = VIEWPORTS[viewport];
 
-      // Créer un contexte de navigation
+      // Create navigation context with optimized headers
+      const defaultHeaders = {
+        'Accept-Encoding': 'gzip, deflate, br', // Compression to speed up HTML transfer
+        ...(extraHeaders || {}),
+      };
+
       context = await this.browser.newContext({
         viewport: {
           width: viewportConfig.width,
@@ -330,13 +352,13 @@ export class PlaywrightService {
         isMobile: viewportConfig.isMobile,
         hasTouch: viewportConfig.hasTouch,
         ...(userAgent ? { userAgent } : {}),
-        ...(extraHeaders ? { extraHTTPHeaders: extraHeaders } : {}),
+        extraHTTPHeaders: defaultHeaders,
       });
 
-      // Créer une page
+      // Create page
       page = await context.newPage();
 
-      // Définir le timeout (Hard Timeout)
+      // Set timeout (Hard Timeout)
       page.setDefaultTimeout(timeout);
 
       // ⚡ AGGRESSIVE RESOURCE BLOCKING
@@ -360,7 +382,7 @@ export class PlaywrightService {
         timeout,
       });
 
-      // Vérifier le status HTTP
+      // Check HTTP status
       if (!response) {
         return {
           success: false,
@@ -411,8 +433,27 @@ export class PlaywrightService {
           timeout: 8000, // 8s max
         });
       } catch {
-        // Si timeout, continuer quand même (Mode Dégradé)
+        // If timeout, continue anyway (Degraded Mode)
         console.warn(`[WARN] Smart waiting timeout for ${viewport} - continuing anyway`);
+      }
+
+      // ⚡ READINESS CHECK — Stratégie "First Match" (Gymshark, etc.)
+      // Attendre le titre (h1) OU le bouton ATC - dès que l'un est là, on commence l'extraction
+      // Cela garantit que React a commencé à afficher les données critiques
+      try {
+        await Promise.race([
+          page.waitForSelector('h1, [data-testid="product-title"]', {
+            state: 'visible',
+            timeout: 5000,
+          }),
+          page.waitForSelector('button[name="add"], [data-testid*="add-to-cart"], button[aria-label*="Add"], button[aria-label*="Ajouter"]', {
+            state: 'visible',
+            timeout: 5000,
+          }),
+        ]);
+      } catch {
+        // If timeout, continue anyway (Degraded Mode)
+        // Le site peut être lent ou utiliser un autre pattern
       }
 
       // ⚡ FAST-SCROLL — Force lazy-load images en 500ms
@@ -428,7 +469,7 @@ export class PlaywrightService {
           await new Promise(resolve => setTimeout(resolve, 250));
         });
       } catch {
-        // Si erreur JS, continuer (Mode Dégradé)
+        // If JS error, continue anyway (Degraded Mode)
         console.warn(`[WARN] Fast-scroll failed for ${viewport} - continuing anyway`);
       }
 
@@ -441,10 +482,25 @@ export class PlaywrightService {
         fullPage: false, // Above-the-fold uniquement (plus rapide)
       });
 
-      // Récupérer le HTML
+      // LCP (Scoring Engine v1.1) — from Performance API before content extraction
+      let lcpMs: number | undefined;
+      try {
+        lcpMs = await page.evaluate(() => {
+          const entries = performance.getEntriesByType?.('largest-contentful-paint');
+          if (entries?.length) {
+            const last = entries[entries.length - 1];
+            return last && 'startTime' in last ? Math.round((last as { startTime: number }).startTime) : undefined;
+          }
+          return undefined;
+        });
+      } catch {
+        // LCP not supported or error — leave undefined
+      }
+
+      // Get HTML
       const html = await page.content();
 
-      // Mesurer la hauteur de la page complète
+      // Measure full page height
       const fullPageHeight = await page.evaluate(() => {
         return Math.max(
           document.body.scrollHeight,
@@ -455,14 +511,14 @@ export class PlaywrightService {
         );
       });
 
-      // Durée de chargement
+      // Load duration
       const loadDurationMs = Date.now() - startTime;
 
       // Fermer la page et le contexte
       await page.close();
       await context.close();
 
-      // Retourner le résultat (succès)
+      // Return result (success)
       return {
         success: true,
         url,
@@ -476,26 +532,28 @@ export class PlaywrightService {
           deviceScaleFactor: viewportConfig.deviceScaleFactor,
           loadDurationMs,
           fullPageHeight,
+          ...(lcpMs != null && { lcpMs }),
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Cleanup
       if (page) await page.close().catch(() => {});
       if (context) await context.close().catch(() => {});
 
-      // Déterminer le type d'erreur
+      const err = error instanceof Error ? error : new Error(String(error));
       let errorType: CaptureError['error']['type'] = 'unknown';
-      let errorMessage = error.message || 'Unknown error';
+      let errorMessage = err.message || 'Unknown error';
 
-      if (error.message?.includes('Timeout') || error.message?.includes('timeout')) {
+      if (err.message?.includes('Timeout') || err.message?.includes('timeout')) {
         errorType = 'timeout';
         errorMessage = `Hard timeout after ${options.timeout || 15000}ms (Mode Dégradé SSOT)`;
-      } else if (error.message?.includes('net::')) {
+      } else if (err.message?.includes('net::')) {
         errorType = 'network_error';
-      } else if (error.message?.includes('404')) {
+      } else if (err.message?.includes('404')) {
         errorType = 'not_found';
       }
 
+      const code = getErrorCode(err);
       return {
         success: false,
         url,
@@ -503,7 +561,7 @@ export class PlaywrightService {
         error: {
           type: errorType,
           message: errorMessage,
-          code: error.code,
+          ...(code ? { code } : {}),
         },
         timestamp: new Date().toISOString(),
       };

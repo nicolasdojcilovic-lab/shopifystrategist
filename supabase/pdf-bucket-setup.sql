@@ -32,7 +32,7 @@ CREATE POLICY "Authenticated insert access for pdf-reports"
 ON storage.objects FOR INSERT
 WITH CHECK (bucket_id = 'pdf-reports' AND auth.role() = 'authenticated');
 
--- Policy: Mise à jour authentifiée (PUT/PATCH)
+-- Policy: Authenticated update (PUT/PATCH)
 DROP POLICY IF EXISTS "Authenticated update access for pdf-reports" ON storage.objects;
 CREATE POLICY "Authenticated update access for pdf-reports"
 ON storage.objects FOR UPDATE

@@ -3,9 +3,9 @@
 /**
  * Page /audit/[auditKey]
  *
- * - Polling toutes les 2s vers GET /api/audit/[auditKey]
- * - Affiche le message de statut (Capture..., Génération PDF..., etc.)
- * - Quand COMPLETED : iframe du rapport HTML + bouton "Télécharger le PDF"
+ * - Polls every 2s via GET /api/audit/[auditKey]
+ * - Displays status message (Capture..., PDF generation..., etc.)
+ * - When COMPLETED: HTML report iframe + "Download PDF" button
  */
 
 import { useEffect, useState, useCallback } from 'react';
@@ -36,7 +36,7 @@ export default function AuditPage({
           setData({ status: 'PENDING', message: json.message || 'Démarrage...' });
           return;
         }
-        setError(json?.error || `Erreur ${res.status}`);
+        setError(json?.error || `Error ${res.status}`);
         return;
       }
 
@@ -47,11 +47,11 @@ export default function AuditPage({
       });
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erreur réseau');
+      setError(e instanceof Error ? e.message : 'Network error');
     }
   }, [auditKey]);
 
-  // Polling toutes les 2s tant que non COMPLETED
+  // Poll every 2s until COMPLETED
   useEffect(() => {
     fetchStatus();
 
@@ -68,7 +68,7 @@ export default function AuditPage({
 
   return (
     <main className="min-h-screen bg-[#0a0a0b] flex flex-col">
-      {/* Header */}
+      {/* Page header */}
       <header className="border-b border-zinc-800/80 px-4 py-3 flex items-center justify-between">
         <a
           href="/"
@@ -105,14 +105,14 @@ export default function AuditPage({
             <div className="flex flex-col items-center gap-4">
               <Spinner />
               <p className="text-white font-medium">{data.message || data.status}</p>
-              <p className="text-zinc-500 text-sm">Mise à jour toutes les 2 s</p>
+              <p className="text-zinc-500 text-sm">Updates every 2 s</p>
             </div>
           </div>
         )}
 
         {data && isCompleted && (
           <div className="flex-1 flex flex-col gap-4">
-            {/* Actions */}
+            {/* Action buttons */}
             <div className="flex flex-wrap items-center gap-3">
               {pdfUrl && (
                 <a
@@ -139,7 +139,7 @@ export default function AuditPage({
               )}
             </div>
 
-            {/* Iframe rapport HTML */}
+            {/* HTML report iframe */}
             {htmlUrl ? (
               <div className="flex-1 min-h-[480px] rounded-xl border border-zinc-800/80 overflow-hidden bg-white">
                 <iframe

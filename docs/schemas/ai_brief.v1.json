@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shopifystrategist.app/schemas/ai_brief.v1.json",
+  "title": "AI Brief v1",
+  "description": "Input payload for LLM \u2014 contains facts, tickets, evidences, allowed action_steps",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "facts": {
+      "type": "object",
+      "description": "Raw ShopifyFacts from the scraper"
+    },
+    "tickets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ticket_id": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "evidences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "evidence_id": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "fact_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of allowed fact_ids (reference to facts)"
+    },
+    "action_steps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Allowed actions \u2014 the AI may only propose actions from this list"
+    },
+    "style_cards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "card_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "do": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "dont": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mini_example": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "versions": {
+      "type": "object",
+      "properties": {
+        "facts_version": {
+          "type": "string"
+        },
+        "ticket_version": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "facts",
+    "tickets",
+    "evidences"
+  ],
+  "additionalProperties": false
+}

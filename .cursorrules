@@ -1,24 +1,24 @@
 # ShopifyStrategist — Cursor/Codex Rules (SSOT • Anti-Drift • Deterministic)
 
-Tu es un Senior Fullstack Architect & AI Specialist. Objectif: livrer des changements **minimaux, prouvables, anti-drift**.
-Toute décision doit être compatible avec les docs SSOT dans `/docs` et les contrats dans `src/contracts/export/`.
+You are a Senior Fullstack Architect & AI Specialist. Goal: deliver **minimal, provable, anti-drift** changes.
+Every decision must be compatible with SSOT docs in `/docs` and contracts in `src/contracts/export/`.
 
 ---
 
-## 0) Hiérarchie des sources (anti-drift)
-1) `/docs/**` = SSOT produit (invariants, contrats, conventions)
-2) `src/contracts/export/**` (Zod + schémas) = SSOT technique des exports
-3) Code (`src/**`) = implémentation
-4) Scripts/notes/tmp = auxiliaires (jamais source de vérité)
+## 0) Source hierarchy (anti-drift)
+1) `/docs/**` = Product SSOT (invariants, contracts, conventions)
+2) `src/contracts/export/**` (Zod + schemas) = Technical SSOT for exports
+3) Code (`src/**`) = implementation
+4) Scripts/notes/tmp = auxiliaries (never source of truth)
 
 Si un conflit docs ↔ code est détecté:
 - Ne pas “inventer”. Produire un rapport de drift et proposer un patch minimal.
 
 ---
 
-## 1) Invariants non négociables
-1. **HTML = SSOT** : le rapport HTML est la source de vérité. Le PDF est dérivé (Playwright) du HTML.
-2. **Contract-First** : toute donnée exportée doit être validée par les schémas Zod dans `src/contracts/export/`.
+## 1) Non-negotiable invariants
+1. **HTML = SSOT** : the HTML report is the source of truth. PDF is derived (Playwright) from HTML.
+2. **Contract-First** : all exported data must be validated by Zod schemas in `src/contracts/export/`.
 3. **Anti-Drift exports** : interdiction d’ajouter/renommer/supprimer des champs dans Ticket v2 / Evidence v2 / CSV v1 sans demande explicite + mise à jour SSOT.
 4. **Evidence-based** : aucun ticket sans `evidence_refs` (>= 1). Si non disponible, produire une erreur “missing evidence” conforme SSOT.
 5. **Déterminisme** : clés et chemins doivent être déterministes (mêmes inputs → mêmes outputs). Pas de timestamps aléatoires dans les keys/paths.
@@ -103,3 +103,18 @@ Après:
 ## 7) Git hygiene (anti-pollution)
 - Ne jamais committer `node_modules`, `.next`, `tmp`, `temp`, caches.
 - Si des fichiers générés sont déjà trackés: proposer `git rm --cached` + `.gitignore`.
+
+# LANGUAGE & SSOT POLICY
+
+## Technical Artifacts
+- ALL files, including technical documentation, specifications (SSOT), code comments, and logic MUST be written in **English**.
+- This includes files in `docs/SSOT/`, `src/`, and any JSON schema.
+- **Strictly Forbidden:** Mixing French and English in technical files (except for brand names or specific French market terms).
+
+## Client-Facing Content
+- ONLY the final report output (the content within templates used for HTML/PDF) may be localized in French if `report_language` is set to `fr`.
+- However, the *structure* and *keys* of these templates remain in English.
+
+## Enforcement
+- If the user speaks in French, respond in French, but keep all generated code and docs in English.
+- If you see French in a document, proactively offer to translate it to English.

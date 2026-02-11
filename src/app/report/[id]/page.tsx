@@ -1,10 +1,10 @@
 /**
- * Page de Rapport Individuel — [id]
- * 
- * Affichage du rapport HTML (SSOT) pour un audit donné.
- * Le rapport HTML est la source de vérité (PDF/CSV dérivés).
- * 
- * Conformément à:
+ * Individual Report Page — [id]
+ *
+ * Displays HTML report (SSOT) for a given audit.
+ * HTML report is the source of truth (PDF/CSV are derived).
+ *
+ * Aligns with:
  * - docs/REPORT_OUTLINE.md (V3.1)
  * - docs/SPEC.md
  */
@@ -21,7 +21,7 @@ export default function ReportPage({ params }: ReportPageProps) {
   return (
     <main className="min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+        {/* Page header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-3xl font-bold">Rapport #{id}</h1>
@@ -39,7 +39,7 @@ export default function ReportPage({ params }: ReportPageProps) {
           </p>
         </div>
 
-        {/* Rapport HTML sera chargé ici */}
+        {/* HTML report will be loaded here */}
         <div className="border rounded-lg p-8">
           <div className="text-center text-gray-500">
             <p className="mb-4">Chargement du rapport...</p>

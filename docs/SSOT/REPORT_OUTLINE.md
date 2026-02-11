@@ -1,9 +1,12 @@
 # ShopifyStrategist — REPORT_OUTLINE.md (SSOT-aligned) — V3.1
 ## Owned Concepts (Canonical)
-- TBD
+- HTML report structure and required sections
+- Ticket/Evidence rendering and formatting rules
 
 ## Not Owned (References)
-- TBD
+- **Persistence**: Prisma with Supabase PostgreSQL
+- **Capture**: Playwright-based capture (Desktop/Mobile)
+- **Storage**: Supabase Storage Buckets
 
 **Purpose:** freeze the “agency-grade” deliverable (structure + rules + formats) to prevent drift and reduce support.  
 **SSOT:** the **HTML report** is the source of truth; the **PDF** is a strict (Playwright) rendering of the HTML.

@@ -1,9 +1,12 @@
 # ShopifyStrategist — SPEC.md (SSOT)
 ## Owned Concepts (Canonical)
-- TBD
+- Product funnel and deliverable definitions
+- Non-negotiable invariants and SSOT hierarchy
 
 ## Not Owned (References)
-- TBD
+- **Persistence**: Prisma with Supabase PostgreSQL
+- **Capture**: Playwright-based capture (Desktop/Mobile)
+- **Storage**: Supabase Storage Buckets
 
 **Status:** SSOT (Single Source Of Truth = single source of truth)  
 **Owner:** Nicolas  

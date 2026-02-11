@@ -1,7 +1,7 @@
 /**
- * API Route: POST /api/audit-solo (SSOT)
+ * API Route: POST /api/audit/solo (SSOT)
  *
- * Lance un audit SOLO. Enveloppe conforme à docs/API_DOC.md.
+ * Starts a SOLO audit. Envelope conforms to docs/API_DOC.md.
  * Body: { url: string, locale?: string, options?: { copy_ready?: boolean } }
  * Response: keys, versions, artifacts, report_meta, exports, errors
  */
@@ -43,7 +43,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const locale = typeof body?.locale === 'string' ? body.locale : 'fr';
+    const lang = typeof body?.lang === 'string' ? body.lang : typeof body?.locale === 'string' ? body.locale : 'fr';
+    const locale: 'fr' | 'en' = lang === 'en' ? 'en' : 'fr';
     const copyReady = !!body?.options?.copy_ready;
 
     const auditService = new AuditService();
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // status = 'ok' | 'degraded' → HTTP 200, enveloppe SSOT
+    // status = 'ok' | 'degraded' → HTTP 200, SSOT envelope
     const versions: Record<string, string | number> = {
       REPORT_OUTLINE_VERSION,
       TICKET_SCHEMA_VERSION: String(TICKET_SCHEMA_VERSION),
@@ -109,8 +110,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(envelope, { status: 200 });
   } catch (error) {
-    console.error('[API /api/audit-solo POST]', error);
-    const message = error instanceof Error ? error.message : 'Erreur inconnue';
+    console.error('[API POST /api/audit/solo]', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
       { status: 'error', error: { code: 'AUDIT_FAILED', message } },
       { status: 500 }

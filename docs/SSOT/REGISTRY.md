@@ -1,10 +1,16 @@
 # REGISTRY.md (v1.0) — Elite Lock (SSOT)
 
 ## Owned Concepts (Canonical)
-- TBD
+- Taxonomy (`subject_key`, `root_cause_key`) — closed lists defined in this file
+- Rules and detectors (`rule_id`) — mapping to criteria and defaults
+- Scoring criteria (`criteria_id`, `weight`) — weights and explanations
+- Templates (`template_id`) — versioned template catalog conventions
 
 ## Not Owned (References)
-- TBD
+- **Persistence**: Prisma with Supabase PostgreSQL
+- **Capture**: Playwright-based capture (Desktop/Mobile)
+- **Storage**: Supabase Storage Buckets
+- **AI (optional)**: OpenAI SDK (GPT-4o) for draft ticket synthesis; validation via Zod schemas
 
 ## Role
 This file is the **source of truth** for:
@@ -429,3 +435,5 @@ By default:
 ## Implementation notes (NON-SSOT)
 No implementation plan here.
 The code MUST load this registry as **SSOT** and reject out-of-registry outputs.
+
+*Last Updated: 2026-02-08*

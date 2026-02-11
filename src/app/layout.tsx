@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 /**
- * Metadata pour l'application (SEO)
+ * Application metadata (SEO)
  */
 export const metadata: Metadata = {
   title: 'ShopifyStrategist',
@@ -11,9 +11,9 @@ export const metadata: Metadata = {
 
 /**
  * Root Layout (App Router)
- * 
- * Layout racine de l'application Next.js.
- * Respecte la structure SSOT définie dans /docs.
+ *
+ * Next.js application root layout.
+ * Aligns with SSOT structure defined in /docs.
  */
 export default function RootLayout({
   children,

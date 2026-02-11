@@ -1,10 +1,16 @@
 # REPORT_ELITE_REQUIREMENTS.md (v1.9)
 
 ## Owned Concepts (Canonical)
-- TBD
+- Report structure (HTML SSOT, required sections, evidence-based tickets)
+- Evidence requirements (evidence_refs ≥ 1, completeness mapping, missing-evidence reasons)
+- Degraded mode contracts (HTML mandatory, PDF/CSV best-effort, errors[] stable codes)
+- Client-facing text rules (templates, no mixing fr/en, typed variables)
 
 ## Not Owned (References)
-- TBD
+- **REGISTRY.md**: Taxonomy, criteria, rules, templates (anti-drift)
+- **PDF**: Playwright (derived from HTML, no content transformation)
+- **Persistence**: Prisma + Supabase (storage for screenshots, HTML reports)
+- **AI (optional)**: OpenAI SDK (GPT-4o) for draft synthesis only; not used for final scoring/detection
 
 ## Objective
 Produce a Shopify audit report at an **elite level**: “agency-grade”, sendable as-is, **client-safe**, robust in degraded mode, and **reproducible**.
@@ -58,6 +64,35 @@ All “final” text comes from a **versioned template catalog** AND must comply
 - **Typed** variables only (no “final” free-text).
 - Deterministic bullet ordering: sort by `rule_id` then `step_id`.
 
+### 0.5 Evidence required (release-blocking)
+Hard rule:
+- Every **client-facing** ticket MUST have `evidence_refs[]` with **length ≥ 1**.
+
+On violation:
+- Do **not** emit the ticket in client-facing or exports.
+- Emit a `contract_error` entry in appendix with a stable code (e.g. `EVIDENCE_MISSING_FOR_TICKET`).
+- The report must remain client-safe (no unsupported claim).
+
+Notes:
+- Evidence items must be resolvable (anchor/wrapper exists in HTML, or explicit reason is recorded).
+- If evidence is missing due to degradation, the report must explicitly mark the limitation and downgrade claims to hypotheses.
+
+### 0.6 Degraded mode contract (client-safe)
+Goal: partial failures still produce a **usable, client-safe** report, with explicit limitations and stable contracts.
+
+Rules:
+1) **HTML is mandatory**: if `artifacts.html_ref` exists, the job may return `status="ok"` (even if some modules failed).
+2) **PDF/CSV are best-effort**:
+   - `pdf_ref` may be null
+   - `csv_ref` (or ticket export) may be null
+   - but HTML must contain a client-safe explanation + System Health summary.
+3) `errors[]` must be populated with stable codes and client-safe descriptions for each degraded subsystem.
+4) The report must include a **Missing evidence / Limitations** section whenever `evidence_completeness != "complete"`:
+   - what is missing,
+   - why (closed reasons),
+   - what was degraded/disabled,
+   - what remains reliable.
+5) Degradation must be **deterministic** for a given `snapshot_key + versions` (same downgrade decisions).
 ---
 
 ## 1) Registry Contract (anti-drift) (MUST)
@@ -139,7 +174,7 @@ Fingerprint:
 ---
 
 ## 6) Evidence-based (MUST)
-- Each ticket has ≥ 1 `evidence_ref`.
+- Each ticket has `evidence_refs[]` with length ≥ 1.
 - Allowed evidence types: those listed in `REGISTRY.md` (or in the equivalent technical contract if separated).
 - Zero causal attribution without `config_fact|network_fact` (otherwise `where="unknown"`).
 - Claim ↔ evidence: summaries contain only supported claims; otherwise rephrase as a hypothesis + adjust confidence.
@@ -335,3 +370,5 @@ The report may be delivered progressively (e.g., “skeleton → filled sections
 - client-safe at every intermediate step
 - deterministic for a given snapshot + versions
 - consistent with Registry gating and template rules
+
+*Last Updated: 2026-02-08*

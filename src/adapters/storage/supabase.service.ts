@@ -13,6 +13,7 @@
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { getErrorCode } from '@/lib/error-utils';
 
 /**
  * Configuration Supabase Storage
@@ -34,7 +35,7 @@ export interface UploadResult {
   path: string;
   publicUrl: string;
   size: number;
-  cached: boolean; // true si fichier existait déjà
+  cached: boolean; // true if file already existed
 }
 
 /**
@@ -183,11 +184,11 @@ export class SupabaseStorageService {
     } = options;
 
     try {
-      // Générer le chemin du fichier
+      // Generate file path
       const filename = `${auditKey}_${viewport}.png`;
       const path = `screenshots/${filename}`;
 
-      // Vérifier si le fichier existe déjà (cache hit)
+      // Check if file already exists (cache hit)
       if (checkExisting) {
         const { data: existingFile } = await this.client.storage
           .from(STORAGE_CONFIG.buckets.screenshots)
@@ -196,7 +197,7 @@ export class SupabaseStorageService {
           });
 
         if (existingFile && existingFile.length > 0) {
-          // Fichier existe déjà
+          // File already exists
           if (!overwrite) {
             // Retourner l'URL existante (cache hit)
             const { data: publicUrlData } = this.client.storage
@@ -211,7 +212,7 @@ export class SupabaseStorageService {
               cached: true,
             };
           }
-          // Sinon, écraser (continue)
+          // Otherwise, overwrite (continue)
         }
       }
 
@@ -220,7 +221,7 @@ export class SupabaseStorageService {
         .from(STORAGE_CONFIG.buckets.screenshots)
         .upload(path, buffer, {
           contentType,
-          upsert: overwrite, // Écraser si existe
+          upsert: overwrite, // Overwrite if exists
         });
 
       if (error) {
@@ -234,7 +235,7 @@ export class SupabaseStorageService {
         };
       }
 
-      // Récupérer la publicUrl
+      // Get publicUrl
       const { data: publicUrlData } = this.client.storage
         .from(STORAGE_CONFIG.buckets.screenshots)
         .getPublicUrl(data.path);
@@ -246,13 +247,15 @@ export class SupabaseStorageService {
         size: buffer.length,
         cached: false,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      const code = getErrorCode(error);
       return {
         success: false,
         error: {
           type: 'unknown',
-          message: error.message || 'Unknown upload error',
-          code: error.code,
+          message: err.message || 'Unknown upload error',
+          ...(code ? { code } : {}),
         },
       };
     }
@@ -307,11 +310,11 @@ export class SupabaseStorageService {
     } = options;
 
     try {
-      // Générer le chemin du fichier
+      // Generate file path
       const filename = `${auditKey}_${viewport}.html`;
       const path = `html-reports/${filename}`;
 
-      // Vérifier si le fichier existe déjà (cache hit)
+      // Check if file already exists (cache hit)
       if (checkExisting) {
         const { data: existingFile } = await this.client.storage
           .from(STORAGE_CONFIG.buckets.html)
@@ -320,7 +323,7 @@ export class SupabaseStorageService {
           });
 
         if (existingFile && existingFile.length > 0) {
-          // Fichier existe déjà
+          // File already exists
           if (!overwrite) {
             // Retourner l'URL existante (cache hit)
             const { data: publicUrlData } = this.client.storage
@@ -335,7 +338,7 @@ export class SupabaseStorageService {
               cached: true,
             };
           }
-          // Sinon, écraser (continue)
+          // Otherwise, overwrite (continue)
         }
       }
 
@@ -347,7 +350,7 @@ export class SupabaseStorageService {
         .from(STORAGE_CONFIG.buckets.html)
         .upload(path, buffer, {
           contentType,
-          upsert: overwrite, // Écraser si existe
+          upsert: overwrite, // Overwrite if exists
         });
 
       if (error) {
@@ -361,7 +364,7 @@ export class SupabaseStorageService {
         };
       }
 
-      // Récupérer la publicUrl
+      // Get publicUrl
       const { data: publicUrlData } = this.client.storage
         .from(STORAGE_CONFIG.buckets.html)
         .getPublicUrl(data.path);
@@ -373,13 +376,15 @@ export class SupabaseStorageService {
         size: html.length,
         cached: false,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      const code = getErrorCode(error);
       return {
         success: false,
         error: {
           type: 'unknown',
-          message: error.message || 'Unknown upload error',
-          code: error.code,
+          message: err.message || 'Unknown upload error',
+          ...(code ? { code } : {}),
         },
       };
     }
@@ -410,7 +415,7 @@ export function getSupabaseStorageService(): SupabaseStorageService {
 
 export async function closeGlobalSupabaseStorageService(): Promise<void> {
   if (globalService) {
-    // Supabase client n'a pas de méthode close explicite
+    // Supabase client has no explicit close method
     globalService = null;
   }
 }
